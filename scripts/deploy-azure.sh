@@ -18,6 +18,7 @@ restore_startup() {
   exit "$status"
 }
 trap restore_startup EXIT
+az webapp config appsettings set -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false ENABLE_ORYX_BUILD=false NEXT_TELEMETRY_DISABLED=1 -o none
 az webapp config set -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --startup-file 'node scripts/azure-maintenance.mjs' -o none
 maintenance_ready=false
 for attempt in $(seq 1 36); do
@@ -31,8 +32,30 @@ if [[ "$maintenance_ready" != true ]]; then
   echo "::error::Maintenance runtime did not become ready; refusing to replace live files."
   exit 1
 fi
-az webapp config appsettings set -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false ENABLE_ORYX_BUILD=false NEXT_TELEMETRY_DISABLED=1 -o none
-az webapp deploy -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --src-path dist/website.zip --type zip --clean true --restart false --track-status false -o none
+previous_deployment="$(az webapp log deployment list -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --query '[0].id' -o tsv)"
+az webapp deploy -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --src-path dist/website.zip --type zip --clean true --restart false --track-status false --async true --timeout 1200000 -o none
+deployed=false
+for attempt in $(seq 1 60); do
+  deployment="$(az webapp log deployment list -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --query '[0].{id:id,status:status}' -o json)"
+  deployment_id="$(jq -er '.id' <<< "$deployment")"
+  deployment_status="$(jq -er '.status' <<< "$deployment")"
+  if [[ "$deployment_id" != "$previous_deployment" ]]; then
+    if [[ "$deployment_status" == 4 ]]; then
+      deployed=true
+      break
+    fi
+    if [[ "$deployment_status" == 3 ]]; then
+      az webapp log deployment show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --deployment-id "$deployment_id" -o json
+      echo "::error::Azure failed to extract or deploy the release."
+      exit 1
+    fi
+  fi
+  sleep 10
+done
+if [[ "$deployed" != true ]]; then
+  echo "::error::Azure did not confirm release deployment within the time limit."
+  exit 1
+fi
 az webapp config set -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" --startup-file "$startup" -o none
 az webapp restart -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME"
 ready=false

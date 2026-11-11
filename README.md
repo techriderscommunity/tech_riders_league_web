@@ -95,6 +95,9 @@ dentro de su VNet, no desde el runner público de GitHub. El CI no recrea la
 infraestructura, cambia el tamaño de los servicios ni abre el registro.
 
 El B1 no tiene slots: hay una breve ventana de mantenimiento con HTTP 503.
+La transferencia se solicita de forma asíncrona y se espera la confirmación
+de Kudu antes de cambiar el inicio o reiniciar: recibir el ZIP no significa
+que la extracción haya terminado.
 Se restaura el comando de inicio incluso si falla el despliegue, pero eso no
 revierte archivos ni migraciones ya aplicadas. Un fallo requiere revisar los
 logs y, si procede, volver a desplegar una versión compatible. Para migraciones
