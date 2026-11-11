@@ -77,7 +77,10 @@ Sus variables son:
 | `AZURE_WEBAPP_URL` | URL HTTPS, sin barra final |
 
 La credencial federada confía exclusivamente en
-`repo:techriderscommunity/tech_riders_league_web:environment:azure-test`.
+`repo:techriderscommunity@205064653/tech_riders_league_web@1454143740:environment:azure-test`.
+Este es el `subject` real emitido por GitHub para este repositorio e incluye
+los IDs del propietario y del repositorio. Debe coincidir exactamente con el
+token OIDC; no sustituirlo por el formato anterior sin IDs.
 La identidad de despliegue tiene `Website Contributor` únicamente sobre esta
 web; no está adjunta al runtime ni tiene acceso PostgreSQL. Las credenciales
 SMTP/GitHub y la configuración de datos permanecen en App Service, nunca en
