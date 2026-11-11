@@ -1,0 +1,290 @@
+{
+  "id": "tech-riders-league-2027",
+  "nombre": {
+    "estado": "confirmado",
+    "publicacion": "autorizada",
+    "valor": "Tech Riders League 2027"
+  },
+  "periodo": {
+    "estado": "confirmado",
+    "publicacion": "autorizada",
+    "valor": {
+      "inicio": "2027-01",
+      "fin": "2027-05"
+    }
+  },
+  "estructura": {
+    "estado": "confirmado",
+    "publicacion": "autorizada",
+    "valor": {
+      "etapas": 5,
+      "descripcion": "Cuatro eventos temáticos y un hackathon final."
+    }
+  },
+  "fechaSeguridad": {
+    "estado": "pendiente",
+    "publicacion": "autorizada",
+    "valor": "2027-04-10",
+    "mensaje": "Fecha prevista, sujeta a revisión por posible coincidencia con Global Azure."
+  },
+  "comunidadesAnfitrionasPendientes": {
+    "estado": "pendiente",
+    "publicacion": "no-autorizada",
+    "mensaje": "Las comunidades anfitrionas pendientes se comunicarán cuando estén confirmadas."
+  },
+  "participacion": {
+    "estado": "bloqueado",
+    "publicacion": "no-autorizada",
+    "mensaje": "El proceso, el destino oficial y las condiciones de privacidad y consentimiento siguen pendientes."
+  },
+  "reglamento": {
+    "estado": "pendiente",
+    "publicacion": "no-autorizada",
+    "mensaje": "El reglamento público definitivo y los criterios de desempate siguen pendientes de aprobación."
+  },
+  "agenda": {
+    "estado": "en-edicion",
+    "publicacion": "no-autorizada",
+    "mensaje": "Solo se publicará el horario confirmado; no se añaden sesiones ni actividades por inferencia."
+  },
+  "contenidoTemporalmenteNoDisponible": {
+    "estado": "temporalmente-no-disponible",
+    "publicacion": "no-autorizada",
+    "mensaje": "El contenido no está disponible temporalmente."
+  },
+  "etapas": [
+    {
+      "slug": "negocio-arquitectura",
+      "nombre": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "Negocio y Arquitectura"
+      },
+      "fecha": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "2027-01-16"
+      },
+      "comunidad": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "Guarandinga"
+      },
+      "descripcion": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La agenda y los detalles se publicarán cuando estén confirmados."
+      }
+    },
+    {
+      "slug": "datos",
+      "nombre": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "Datos"
+      },
+      "fecha": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La fecha se comunicará cuando esté confirmada."
+      },
+      "comunidad": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La comunidad anfitriona está pendiente de confirmación."
+      },
+      "descripcion": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La agenda y los detalles se publicarán cuando estén confirmados."
+      }
+    },
+    {
+      "slug": "cloud",
+      "nombre": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "Cloud"
+      },
+      "fecha": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La fecha se comunicará cuando esté confirmada."
+      },
+      "comunidad": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La comunidad anfitriona está pendiente de confirmación."
+      },
+      "descripcion": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La agenda y los detalles se publicarán cuando estén confirmados."
+      }
+    },
+    {
+      "slug": "seguridad",
+      "nombre": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "Ciberseguridad"
+      },
+      "fecha": {
+        "estado": "pendiente",
+        "publicacion": "autorizada",
+        "valor": "2027-04-10",
+        "mensaje": "Fecha prevista, sujeta a revisión por posible coincidencia con Global Azure."
+      },
+      "comunidad": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La comunidad anfitriona está pendiente de confirmación."
+      },
+      "descripcion": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La agenda y los detalles se publicarán cuando estén confirmados."
+      }
+    }
+  ],
+  "secciones": {
+    "speakers": {
+      "titulo": "Speakers y sesiones",
+      "descripcion": "Consulta personas ponentes y sesiones cuando exista contenido validado y autorizado.",
+      "contenido": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "Los speakers y las sesiones siguen pendientes de confirmación. No se publican nombres ni detalles por inferencia."
+      }
+    },
+    "equipos": {
+      "titulo": "Equipos",
+      "descripcion": "Reglas públicas de composición y continuidad de equipos.",
+      "contenido": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": [
+          "Participar en al menos 3 de los 4 eventos.",
+          "Mantener al menos 3 de los 4 integrantes originales.",
+          "Utilizar el mismo nombre durante toda la temporada.",
+          "Designar un capitán, encargado de las comunicaciones y de las entregas."
+        ]
+      },
+      "directorio": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "No se publican datos individuales sin la revisión legal y los consentimientos requeridos."
+      }
+    },
+    "comunidades": {
+      "titulo": "Comunidades",
+      "descripcion": "Tech Riders organiza la League; cuatro comunidades forman parte del recorrido y SirviendoCodigo grabará sus sesiones y otros contenidos.",
+      "contenido": {
+        "estado": "parcial",
+        "publicacion": "autorizada",
+        "valor": "Guarandinga está confirmada como anfitriona del Mundo 1 (Negocio y Arquitectura). Las otras tres comunidades siguen pendientes de confirmación."
+      }
+    },
+    "colaboradores": {
+      "titulo": "Colaboradores",
+      "descripcion": "Información pública de colaboraciones formalizadas y autorizadas.",
+      "contenido": {
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "Tajamar es sponsor de la Tech Riders League 2027."
+      }
+    },
+    "puntuacion": {
+      "titulo": "Puntuación",
+      "descripcion": "Criterios públicos de puntuación indicados en el funcional; las condiciones definitivas dependen del reglamento aprobado.",
+      "contenido": {
+        "estado": "parcial",
+        "publicacion": "autorizada",
+        "valor": "50 puntos por asistencia de equipo, 50 por una foto de equipo etiquetando comunidades y sponsors y 100 por una entrega válida. Bonus de 100, 75 y 50 puntos para los tres primeros equipos válidos. Una entrega válida cumple todos los requisitos, funciona correctamente, es reproducible y supera los criterios definidos por la comunidad. La velocidad solo cuenta si la solución es correcta."
+      },
+      "reglamento": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "El reglamento público definitivo sigue pendiente de aprobación."
+      }
+    },
+    "clasificacion": {
+      "titulo": "Clasificación",
+      "descripcion": "La clasificación acumulará puntos durante la temporada y se actualizará con resultados validados.",
+      "contenido": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "La clasificación todavía no ha comenzado. Se publicará cuando haya resultados validados."
+      },
+      "desempates": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "No hay criterios de desempate confirmados; no se asigna prioridad arbitraria."
+      }
+    },
+    "participacion": {
+      "titulo": "Participación",
+      "descripcion": "Consulta el estado de participación sin abrir un registro no aprobado.",
+      "contenido": {
+        "estado": "bloqueado",
+        "publicacion": "no-autorizada",
+        "mensaje": "El proceso, el destino oficial y las condiciones de privacidad y consentimiento siguen pendientes. No se recopilan datos."
+      }
+    },
+    "retos": {
+      "titulo": "Retos",
+      "descripcion": "Enunciados, requisitos y resultados se publicarán cuando hayan sido validados.",
+      "contenido": {
+        "estado": "pendiente",
+        "publicacion": "no-autorizada",
+        "mensaje": "Los retos se publicarán cuando la organización valide su contenido. No hay fechas límite confirmadas."
+      }
+    },
+    "hackathon": {
+      "titulo": "Hackathon final",
+      "descripcion": "La final integra el aprendizaje previo de la temporada.",
+      "contenido": {
+        "estado": "parcial",
+        "publicacion": "autorizada",
+        "valor": "La información pública de la final se completará cuando se confirme la agenda. No se publican actividades de deliberación no confirmadas ni se gestionan entregas en esta web."
+      }
+    },
+    "memoria": {
+      "titulo": "Memoria de temporada",
+      "descripcion": "Recursos públicos relacionados con eventos, sesiones, comunidades y retos.",
+      "contenido": {
+        "estado": "en-edicion",
+        "publicacion": "no-autorizada",
+        "mensaje": "Los recursos se incorporarán cuando estén revisados y autorizados para publicación."
+      }
+    },
+    "premios": {
+      "titulo": "Premios",
+      "descripcion": "Premios de clasificación general, premios por evento pendientes de sponsor y sorteo de vouchers Fundamentals.",
+      "contenido": {
+        "estado": "parcial",
+        "publicacion": "autorizada",
+        "valor": "Clasificación general: 750 € para el primer clasificado, 500 € para el segundo y 250 € para el tercero; total de 1.500 €. Premios por evento pendientes de sponsor. Sorteo de 30 vouchers Fundamentals: 5 en cada uno de los cuatro mundos y 10 en el hackathon final.",
+        "mensaje": "Las bases y condiciones se publicarán con el reglamento aprobado."
+      }
+    },
+    "preguntas": {
+      "titulo": "Preguntas frecuentes",
+      "descripcion": "Respuestas públicas respaldadas por información confirmada.",
+      "contenido": {
+        "estado": "parcial",
+        "publicacion": "autorizada",
+        "valor": "La League es una temporada tecnológica con cuatro eventos temáticos y un hackathon final. Los detalles que dependen de decisiones pendientes se marcarán como tales."
+      }
+    },
+    "avisos": {
+      "titulo": "Avisos oficiales",
+      "descripcion": "Cambios confirmados y estados relevantes para la temporada.",
+      "contenido": {
+        "estado": "parcial",
+        "publicacion": "autorizada",
+        "valor": "La fecha prevista de Seguridad, 10 de abril de 2027, continúa sujeta a revisión por posible coincidencia con Global Azure. La fecha no está confirmada."
+      }
+    }
+  }
+}

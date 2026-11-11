@@ -1,0 +1,22 @@
+.sponsor {
+  display: grid;
+  place-items: center;
+  width: min(100%, 28rem);
+  min-height: 11rem;
+  margin-block: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 3px solid #ffc44c;
+  background: #fff;
+  box-shadow: 5px 5px 0 #020c19;
+}
+
+.sponsor:hover {
+  border-color: #1abcf0;
+}
+
+.sponsor img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}

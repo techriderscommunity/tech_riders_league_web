@@ -1,0 +1,89 @@
+.introduction {
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 3px solid #087ba8;
+  background: #102943;
+  color: #d2e4f2;
+  box-shadow: 5px 5px 0 #087ba833;
+}
+
+.introduction h1 {
+  margin: 0.5rem 0 1rem;
+  color: var(--gold);
+  font: bold clamp(1.8rem, 3vw, 3rem) "Courier New", monospace;
+  text-transform: uppercase;
+}
+
+.introduction p {
+  max-width: 70rem;
+}
+
+.introduction strong {
+  color: #fff1aa;
+}
+
+.opening {
+  color: #fff;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 700;
+}
+
+.modalities {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.modality {
+  padding: clamp(1.25rem, 2vw, 2rem);
+  border: 3px solid #163b62;
+  background: #102943;
+  color: #d2e4f2;
+  box-shadow: 4px 4px 0 #163b6233;
+}
+
+.symbol {
+  font-size: 2rem;
+}
+
+.modality h3 {
+  margin: 0.75rem 0;
+  color: var(--gold);
+  font: bold 1.25rem "Courier New", monospace;
+}
+
+.modality p {
+  margin: 0;
+}
+
+.stand {
+  margin: 1.5rem 0 0;
+  padding: 1.25rem;
+  border-left: 4px solid #087ba8;
+  background: var(--cyan-soft);
+}
+
+.contribution,
+.commitment {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 2px solid #b9dbe8;
+}
+
+.contribution {
+  background: var(--cyan-soft);
+}
+
+.commitment {
+  background: #fff6d9;
+  border-color: #d8b65d;
+}
+
+.contribution p:last-child,
+.commitment p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 50rem) {
+  .modalities {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

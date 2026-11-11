@@ -1,0 +1,41 @@
+.link {
+  width: fit-content;
+  padding: 0.4rem 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #075985;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dialog {
+  width: min(36rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 3px solid #163b62;
+  background: var(--paper);
+  color: var(--ink);
+  overflow-y: auto;
+}
+
+.dialog::backdrop {
+  background: rgb(4 20 41 / 82%);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.header button {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}

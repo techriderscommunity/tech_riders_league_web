@@ -1,0 +1,98 @@
+.equipos {
+  padding: clamp(1rem, 3vw, 2.5rem);
+  border: 3px solid #b9d1ef;
+  background: #edf3ff;
+  box-shadow: 5px 5px 0 #b9d1ef;
+}
+
+.equipos h2 {
+  margin: 0 0 1.5rem;
+  color: #06182e;
+  font: bold clamp(1.5rem, 3vw, 2.5rem) "Courier New", monospace;
+}
+
+.contenido {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+}
+
+.ilustracion {
+  display: block;
+  width: 100%;
+  max-width: 446px;
+  margin-inline: auto;
+  height: auto;
+  image-rendering: auto;
+}
+
+.detalles {
+  min-width: 0;
+}
+
+.integrantes {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin: 0 0 1.5rem;
+  color: #4163b3;
+}
+
+.integrantes strong {
+  color: #244edc;
+  font: bold 5.5rem/1 "Courier New", monospace;
+}
+
+.reglas {
+  padding: clamp(1rem, 2vw, 2rem);
+  border: 3px solid #193676;
+  background: #10214c;
+  color: #e2edff;
+  box-shadow: 4px 4px 0 #a9bfdf;
+}
+
+.pixeles {
+  display: block;
+  width: 0.65rem;
+  height: 0.65rem;
+  background: #65def8;
+  box-shadow: 0.9rem 0 #65def8, 1.8rem 0 #65def8;
+}
+
+.reglas h3 {
+  margin: 1rem 0 0.7rem;
+  color: #fff;
+  font: bold 1.2rem "Courier New", monospace;
+}
+
+.reglas ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.reglas li + li {
+  margin-top: 0.5rem;
+}
+
+.reglas li::marker {
+  color: #65def8;
+}
+
+.nota {
+  margin: 0.9rem 0 0;
+  color: #42639c;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+@media (max-width: 50rem) {
+  .contenido {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ilustracion {
+    width: min(100%, 28rem);
+    justify-self: center;
+  }
+}

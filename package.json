@@ -1,0 +1,35 @@
+{
+  "name": "tech-riders-league",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": "24.x" },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "staff:bootstrap": "node --experimental-strip-types --env-file-if-exists=.env.local scripts/bootstrap.mjs",
+    "mail:send": "node --experimental-strip-types --env-file-if-exists=.env.local scripts/send-mail.mjs",
+    "data:retire": "node --experimental-strip-types --env-file-if-exists=.env.local scripts/retire-data.mjs",
+    "typecheck": "tsc --noEmit",
+    "package:release": "node scripts/package-release.mjs",
+    "test": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/pg": "^8.15.0",
+    "@types/nodemailer": "^7.0.0",
+    "embedded-postgres": "18.6.0-beta.19",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "next": "^16.4.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "pg": "^8.16.0",
+    "nodemailer": "^10.5.0"
+  }
+}
