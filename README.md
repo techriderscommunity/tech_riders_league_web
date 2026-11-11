@@ -77,11 +77,15 @@ Sus variables son:
 | `AZURE_WEBAPP_URL` | URL HTTPS, sin barra final |
 
 La credencial federada confía exclusivamente en
-`repo:techriderscommunity/tech_riders_league:environment:azure-test`.
+`repo:techriderscommunity/tech_riders_league_web:environment:azure-test`.
 La identidad de despliegue tiene `Website Contributor` únicamente sobre esta
 web; no está adjunta al runtime ni tiene acceso PostgreSQL. Las credenciales
 SMTP/GitHub y la configuración de datos permanecen en App Service, nunca en
 el repositorio ni en el artefacto.
+
+El código de esta web vive en `techriderscommunity/tech_riders_league_web`.
+El repositorio `techriderscommunity/tech_riders_league` se reserva para los
+proyectos publicados de los equipos; no es el origen del despliegue web.
 
 La base PostgreSQL es privada. Las migraciones se ejecutan desde App Service
 dentro de su VNet, no desde el runner público de GitHub. El CI no recrea la
