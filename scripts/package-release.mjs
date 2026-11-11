@@ -26,6 +26,7 @@ for (const name of ["src", "public", "content", "database", "node_modules"]) {
 }
 await cp(join(root, ".next"), join(destination, ".next"), {
   recursive: true,
+  dereference: true,
   filter: source => source !== join(root, ".next", "cache"),
 });
 await mkdir(join(destination, "scripts"));

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -21,6 +21,8 @@ test("the release package includes only production website files", async () => {
     }));
     for (const name of ["src/app/page.tsx", "public/logo.png", "content/temporada.json", "database/001-management.sql", "node_modules/pg/package.json", ".next/BUILD_ID", ".next/server/app.js", ".next/cache/ignored", ".env.local", "tests/ignored.ts", "knowledge/ignored"]) await file(name);
     for (const name of ["azure-initialize.mjs", "azure-maintenance.mjs", "migrate.mjs", "database.mjs", "verify-azure-database.mjs", "bootstrap.mjs", "send-mail.mjs", "retire-data.mjs"]) await file(`scripts/${name}`);
+    await mkdir(join(root, ".next", "node_modules"));
+    await symlink(join(root, "node_modules", "pg"), join(root, ".next", "node_modules", "pg-fixture"), "junction");
     await cp(new URL("../scripts/package-release.mjs", import.meta.url), join(root, "scripts", "package-release.mjs"));
     await file("node_modules/test-tool/package.json", "{}");
     const rejected = run();
@@ -29,9 +31,10 @@ test("the release package includes only production website files", async () => {
     await rm(join(root, "node_modules", "test-tool"), { recursive: true });
     const packaged = run();
     assert.equal(packaged.status, 0, packaged.stderr);
-    for (const name of ["public/logo.png", ".next/BUILD_ID", "database/001-management.sql", "scripts/migrate.mjs", "node_modules/pg/package.json"]) {
+    for (const name of ["public/logo.png", ".next/BUILD_ID", ".next/node_modules/pg-fixture/package.json", "database/001-management.sql", "scripts/migrate.mjs", "node_modules/pg/package.json"]) {
       assert.ok((await stat(join(root, "dist", "web", name))).isFile());
     }
+    assert.equal((await lstat(join(root, "dist", "web", ".next", "node_modules", "pg-fixture"))).isSymbolicLink(), false);
     for (const name of [".env.local", "tests", "knowledge", ".next/cache", "scripts/package-release.mjs"]) {
       await assert.rejects(stat(join(root, "dist", "web", name)), { code: "ENOENT" });
     }
