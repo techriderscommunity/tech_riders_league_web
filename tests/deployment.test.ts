@@ -41,6 +41,7 @@ test("the release package includes only production website files", async () => {
     const manifest = JSON.parse(await readFile(join(root, "dist", "web", "package.json"), "utf8"));
     assert.equal(manifest.devDependencies, undefined);
     assert.equal(manifest.scripts.test, undefined);
+    assert.equal(manifest.scripts.start, "node node_modules/next/dist/bin/next start");
     const duplicate = run();
     assert.notEqual(duplicate.status, 0);
     assert.match(duplicate.stderr, /already exists/);

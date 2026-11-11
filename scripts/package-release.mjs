@@ -39,7 +39,7 @@ await writeFile(join(destination, "package.json"), JSON.stringify({
   private: true,
   engines: manifest.engines,
   scripts: {
-    start: manifest.scripts.start,
+    start: "node node_modules/next/dist/bin/next start",
     "db:migrate": manifest.scripts["db:migrate"],
     "staff:bootstrap": manifest.scripts["staff:bootstrap"],
     "mail:send": manifest.scripts["mail:send"],
