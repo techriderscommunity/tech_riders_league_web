@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <nav className="footer-group" aria-label="Participa">
               <h2>Participa</h2>
               <Link href="/participacion">Cómo participar</Link>
-              <Link href="/acceso">Acceder / Mi equipo</Link>
+              <Link href="/mi-equipo">Mi cuenta</Link>
             </nav>
             <nav className="footer-group" aria-label="Resultados">
               <h2>Resultados</h2>

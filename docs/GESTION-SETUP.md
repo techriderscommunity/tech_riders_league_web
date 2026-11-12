@@ -4,7 +4,7 @@
 
 - PostgreSQL en todos los entornos, migracion versionada y transacciones.
 - Registro individual, contrasenas scrypt, confirmacion de correo y recuperacion.
-- El boton Login del menu abre el acceso en un modal sin cambiar de pagina.
+- El boton Iniciar sesion del menu abre el acceso en un modal sin cambiar de pagina.
   Comparte los formularios con /acceso, conservado para enlaces de correo e
   invitaciones. Registro y recuperacion se abren en dialogos.
   Recuperacion utiliza un unico campo de correo y envia el enlace de contrasena.
@@ -16,6 +16,12 @@
 - Solo el capitan gestiona el equipo; cada integrante tiene cuenta propia.
 - Envio a revision, correccion y reenvio; staff aprueba o rechaza con motivo.
 - Solicitud de staff sin permisos hasta aprobacion por staff existente.
+- El responsable y las personas de staff, incluidas las solicitudes pendientes,
+  no pueden crear equipos ni incorporarse como integrantes, relevos o sustitutos.
+  Para aprobar staff se comprueba que no exista una vinculacion previa a equipo;
+  cualquier conflicto existente requiere resolverlo manualmente, sin bajas automaticas.
+- La navegacion muestra Gestion al staff aprobado y Mi equipo a participantes;
+  ambos pueden cerrar sesion. Las secciones de Gestion se abren al seleccionarlas.
 - Solo el responsable inicial puede dar de baja a otro staff.
 - Correo mediante SMTP autorizado y bandeja persistente, con fallos visibles,
   reintentos manuales y procesamiento seguro entre varias instancias.

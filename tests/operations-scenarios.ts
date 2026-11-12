@@ -187,11 +187,12 @@ export async function operationsScenarios(context: {
   await ops.communityState(root, { name: "Fixture community", active: false, reason: "Official withdrawal" });
   await assert.rejects(ops.saveChallenge(staff, { eventId: "cloud", title: "Removed", instructions: "Removed", status: "draft" }));
   assert.equal((await database().query("SELECT staff_status FROM users WHERE id=$1", [secondStaff.id])).rows[0].staff_status, "approved", "Other valid community preserves staff role");
-  await service.createTeam(secondStaff, { name: "Dual role fixture" });
+  await assert.rejects(service.createTeam(secondStaff, { name: "Dual role fixture" }), /no pueden participar/);
   await ops.leaveStaff(secondStaff, { reason: "Personal withdrawal" });
   assert.equal((await database().query("SELECT active FROM staff_communities WHERE name='Second fixture community'")).rows[0].active, true);
   await assert.rejects(ops.operationsDashboard(secondStaff));
-  assert.ok((await service.dashboard(secondStaff)).team, "Staff self-withdrawal preserves participant role");
+  await service.createTeam(secondStaff, { name: "Former staff fixture" });
+  assert.ok((await service.dashboard(secondStaff)).team, "Former staff can participate after leaving staff");
 
   await ops.saveContribution(root, { name: "Fixture sponsor", description: "Resources", destination: "Breakfast", amountCents: 0, url: "https://example.test/resource", authorized: false });
   assert.equal((await database().query("SELECT id FROM contributions WHERE authorized")).rowCount, 0);

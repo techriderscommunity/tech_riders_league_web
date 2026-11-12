@@ -41,7 +41,7 @@ export async function POST(request: Request, context: { params: Promise<{ action
       }
       if (action === "redeem") {
         await service.redeem(input);
-        return NextResponse.json({ message: "Correo confirmado o contraseña activada. Ya puedes entrar." });
+        return NextResponse.json({ message: "Correo confirmado o contraseña activada. Ya puedes entrar.", redirect: "/acceso?activado=1" });
       }
       await service.requestAccountMail(input, action === "reset" ? "reset" : "verify");
       return NextResponse.json({ message: "Si el correo corresponde a una cuenta, la solicitud de envío queda registrada. Revisa tu bandeja cuando se procese." });

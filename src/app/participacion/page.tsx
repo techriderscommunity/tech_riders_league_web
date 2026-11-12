@@ -105,6 +105,7 @@ export default function ParticipacionPage() {
               <p id="inscripcion-proximamente">Próximamente</p></>
             )}
             <p>El capitán crea el equipo e invita por correo. Cada integrante se registra y acepta personalmente sus condiciones.</p>
+            <p>El responsable y las personas de staff, incluidas las solicitudes pendientes, no participan en equipos.</p>
             <p className={inscripcionStyles.reward}><strong>Al completarla:</strong> vuestro equipo estará listo para solicitar la validación del staff.</p>
           </li>
           <li className={inscripcionStyles.quest}>

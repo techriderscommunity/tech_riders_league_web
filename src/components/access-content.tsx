@@ -7,11 +7,12 @@ export function AccessContent({ params = {} }: {
   params?: { token?: string; purpose?: string; invitacion?: string };
 }) {
   const enabled = process.env.REGISTRATION_ENABLED === "true";
+  const activation = Boolean(params.token && ["verify", "reset"].includes(params.purpose ?? ""));
   return <>
-    {params.token && ["verify", "reset"].includes(params.purpose ?? "") ? (
+    {activation ? (
       <section>
         <h2>{params.purpose === "verify" ? "Confirma tu correo" : "Activa tu contraseña"}</h2>
-        <ManagementForm action="redeem" values={{ token: params.token, purpose: params.purpose ?? "" }} label="Confirmar">
+        <ManagementForm action="redeem" values={{ token: params.token ?? "", purpose: params.purpose ?? "" }} label="Confirmar">
           {params.purpose === "reset" ? <label>Nueva contraseña<input name="password" type="password" minLength={12} maxLength={128} autoComplete="new-password" required /></label> : null}
           {params.purpose === "reset" ? <>
             <label className="management-check"><input name="adult" type="checkbox" required />Confirmo que tengo al menos 18 años.</label>
@@ -19,7 +20,7 @@ export function AccessContent({ params = {} }: {
           </> : null}
         </ManagementForm>
       </section>
-    ) : null}
+    ) : <>
     <section>
       <h2>Entrar</h2>
       <ManagementForm action="login" values={params.invitacion ? { invitation: params.invitacion } : {}} label="Entrar">
@@ -48,5 +49,6 @@ export function AccessContent({ params = {} }: {
         <label>Correo<input name="email" type="email" autoComplete="email" required /></label>
       </ManagementForm>
     </AccessDialog>
+    </>}
   </>;
 }

@@ -3,7 +3,7 @@ import type { PoolClient } from "pg";
 import { database, transaction } from "./db.ts";
 import { digest, verifyPassword, token } from "./crypto.ts";
 import { accountMail, appUrl, queueMail } from "./mail.ts";
-import { requireStaff, type User } from "./service.ts";
+import { requireParticipant, requireStaff, type User } from "./service.ts";
 import { email, uuid, text, password, ManagementError } from "./validation.ts";
 
 type Input = Record<string, unknown>;
@@ -61,6 +61,7 @@ export async function event(client: PoolClient, id: unknown, writing = true): Pr
   return row;
 }
 export async function team(client: PoolClient, id: unknown, actor?: User): Promise<OperationalTeam> {
+  if (actor) await requireParticipant(client, actor.id);
   const found = await client.query<OperationalTeam>("SELECT * FROM teams WHERE id=$1 FOR UPDATE", [uuid(id)]);
   const row = found.rows[0];
   if (!row || row.status !== "approved") throw new ManagementError("Se necesita un equipo aprobado.");
@@ -70,7 +71,7 @@ export async function team(client: PoolClient, id: unknown, actor?: User): Promi
   return row;
 }
 async function participantAvailable(client: PoolClient, person: string, teamId: string) {
-  await client.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [person]);
+  await requireParticipant(client, person);
   const conflicts = await client.query(
     `SELECT 1 FROM members WHERE user_id=$1 AND active AND season='2027'
      UNION ALL SELECT 1 FROM substitutions WHERE user_id=$1 AND team_id<>$2`, [person, teamId]);
@@ -174,6 +175,7 @@ export async function markAttendance(user: User, input: Input) {
     const reason = text(input.reason, "Motivo de la comprobación", 1000);
     const people = await roster(client, t.id, e.id);
     if (!people.some(p => p.id === person)) throw new ManagementError("La persona no forma parte de la plantilla de este mundo.");
+    if (present) await requireParticipant(client, person);
     if ((present && !luma) || (atEnd && !present)) throw new ManagementError("Asistencia exige Luma validado; presencia al final exige asistencia.");
     if (present && people.filter(p => p.id !== person && p.present).length >= 4) throw new ManagementError("Solo pueden acudir cuatro personas por equipo y mundo.");
     if (present) await allowedAtFinal(client, e, t.id);
@@ -193,6 +195,7 @@ export async function requestCaptain(user: User, input: Input) {
     const nextId = uuid(input.nextId), reason = text(input.reason, "Motivo", 1000);
     const next = await client.query("SELECT 1 FROM members m JOIN users u ON u.id=m.user_id WHERE m.team_id=$1 AND m.user_id=$2 AND m.original AND m.active AND u.disabled_at IS NULL AND u.verified_at IS NOT NULL", [t.id, nextId]);
     if (!next.rowCount || nextId === actor.id) throw new ManagementError("El nuevo capitán debe ser otro de los cuatro originales activos.");
+    await requireParticipant(client, nextId);
     const id = randomUUID();
     await client.query("INSERT INTO captain_changes(id,team_id,previous_id,next_id,reason) VALUES($1,$2,$3,$4,$5)", [id, t.id, actor.id, nextId, reason]);
     await audit(client, actor, "captain.requested", id);
@@ -208,6 +211,7 @@ export async function reviewCaptain(user: User, input: Input) {
     const t = await team(client, change.team_id);
     if (t.captain_id !== change.previous_id) throw new ManagementError("El capitán ha cambiado; la solicitud está obsoleta.");
     if (status === "approved") {
+      await requireParticipant(client, change.next_id);
       const next = await client.query<{ email: string }>("SELECT u.email FROM members m JOIN users u ON u.id=m.user_id WHERE m.team_id=$1 AND m.user_id=$2 AND m.original AND m.active AND u.disabled_at IS NULL", [t.id, change.next_id]);
       if (!next.rows[0]) throw new ManagementError("El candidato ya no es un original activo.");
       await client.query("UPDATE teams SET captain_id=$2,captain_active=false WHERE id=$1", [t.id, change.next_id]);
@@ -226,6 +230,7 @@ export async function replaceMember(user: User, input: Input) {
     const old = await client.query("SELECT 1 FROM members WHERE team_id=$1 AND user_id=$2 AND active", [t.id, previous]);
     const next = await client.query("SELECT 1 FROM users WHERE id=$1 AND verified_at IS NOT NULL AND disabled_at IS NULL AND accepted_at IS NOT NULL", [nextId]);
     if (!old.rowCount || !next.rowCount || previous === nextId) throw new ManagementError("Integrantes no válidos.");
+    await requireParticipant(client, nextId);
     const changes = await client.query("SELECT 1 FROM substitutions WHERE user_id=ANY($1::uuid[])", [[previous, nextId]]);
     if (changes.rowCount) throw new ManagementError("Resuelve primero las sustituciones vinculadas a estas personas.");
     const oldTeams = await client.query<{ team_id: string }>("SELECT team_id FROM members WHERE user_id=$1 AND active", [nextId]);
@@ -410,6 +415,7 @@ export async function award(user: User, input: Input) {
     if (kind === "voucher") {
       const e = await event(client, input.eventId, false);
       eventId = e.id; person = uuid(input.userId);
+      await requireParticipant(client, person);
       const present = await client.query<{ team_id: string }>("SELECT team_id FROM attendance WHERE event_id=$1 AND user_id=$2 AND luma AND present AND at_end", [e.id, person]);
       const count = await client.query<{ count: number }>("SELECT count(*)::int AS count FROM awards WHERE event_id=$1 AND kind='voucher'", [e.id]);
       if (!present.rowCount || count.rows[0].count >= e.voucher_limit) throw new ManagementError("La persona no estaba al final o ya se adjudicó el cupo de vouchers.");
@@ -592,7 +598,7 @@ export async function operationsDashboard(user: User, teamId?: string) {
     const withdrawals = !teamId ? await client.query<{ id: string; user_id: string; reason: string }>("SELECT * FROM withdrawal_requests WHERE status='pending'") : { rows: [] };
     const communities = !teamId ? await client.query<{ name: string; active: boolean }>("SELECT * FROM staff_communities ORDER BY name") : { rows: [] };
     const contributions = !teamId ? await client.query<{ id: string; name: string; description: string; destination: string; amount_cents: number; resource_url: string | null; authorized: boolean }>("SELECT * FROM contributions ORDER BY name") : { rows: [] };
-    const accounts = !teamId ? await client.query<{ id: string; email: string; first_name: string; last_name: string }>("SELECT id,email,first_name,last_name FROM users WHERE verified_at IS NOT NULL AND disabled_at IS NULL ORDER BY email") : { rows: [] };
+    const accounts = !teamId ? await client.query<{ id: string; email: string; first_name: string; last_name: string; is_owner: boolean; staff_status: User["staff_status"] }>("SELECT id,email,first_name,last_name,is_owner,staff_status FROM users WHERE verified_at IS NOT NULL AND disabled_at IS NULL ORDER BY email") : { rows: [] };
     const movements = await client.query<{ team_id: string; event_id: string; concept: string; points: number }>("SELECT * FROM score_entries WHERE $1::uuid IS NULL OR team_id=$1 ORDER BY event_id,concept", [teamId ?? null]);
     const audits = !teamId ? await client.query<{ id: string; action: string; details: Input; created_at: Date }>("SELECT id,action,details,created_at FROM audit_log ORDER BY id DESC LIMIT 100") : { rows: [] };
     return { views, events: events.rows, challenges: challenges.rows, submissions: submissions.rows, changes: changes.rows, previews, global, awards: awards.rows, withdrawals: withdrawals.rows, communities: communities.rows, contributions: contributions.rows, season: season.rows[0], accounts: accounts.rows, movements: movements.rows, audits: audits.rows };

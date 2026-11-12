@@ -150,7 +150,8 @@ select {
 }
 
 .site-nav > a,
-.site-nav > .nav-login {
+.site-nav > .nav-login,
+.site-nav > .nav-session button {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -167,7 +168,8 @@ select {
   color: #80d7f4;
 }
 
-.site-nav > .nav-login {
+.site-nav > .nav-login,
+.site-nav > .nav-session button {
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -191,8 +193,19 @@ select {
 }
 
 .site-nav > a:hover,
-.site-nav > .nav-login:hover {
+.site-nav > .nav-login:hover,
+.site-nav > .nav-session button:hover {
   color: #72ddfa;
+}
+
+.nav-session {
+  margin: 0;
+}
+
+.nav-session [role="alert"],
+.nav-session [role="status"] {
+  max-width: 16rem;
+  white-space: normal;
 }
 
 main#contenido {
@@ -1115,6 +1128,28 @@ button:hover {
   padding: 1.25rem;
   border: 2px solid #163b62;
   margin-block: 1rem;
+}
+
+.management-section {
+  margin-block: 1rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid #163b62;
+  background: #f7f2e4;
+  color: #102943;
+  box-shadow: 5px 5px 0 rgb(16 41 67 / 15%);
+}
+
+.management-section > summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.management-section > summary span {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 400;
 }
 
 .page-heading,

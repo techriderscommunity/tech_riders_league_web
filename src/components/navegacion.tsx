@@ -2,6 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { AccessDialog } from "./access-dialog";
 import { AccessContent } from "./access-content";
+import { cookies } from "next/headers";
+import { sessionUser } from "../lib/management/service";
+import { ManagementForm } from "./management-form";
 
 const enlaces = [
   ["Mapa de la aventura", "/eventos"],
@@ -10,7 +13,10 @@ const enlaces = [
   ["Colabora", "/colaboradores"],
 ] as const;
 
-export function Navegacion() {
+export async function Navegacion() {
+  const store = await cookies();
+  const session = store.get(process.env.NODE_ENV === "production" ? "__Host-league-session" : "league-session")?.value;
+  const user = session ? await sessionUser(session) : undefined;
   return (
     <header className="site-header">
       <Link
@@ -40,9 +46,14 @@ export function Navegacion() {
             {label}
           </Link>
         ))}
-        <AccessDialog label="Login" title="Accede a la League" navigation>
+        {user ? <>
+          <Link href={user.staff_status === "approved" ? "/gestion" : "/mi-equipo"}>
+            {user.staff_status === "approved" ? "Gestión" : user.staff_status === "pending" || user.is_owner ? "Mi cuenta" : "Mi equipo"}
+          </Link>
+          <ManagementForm action="logout" label="Cerrar sesión" className="nav-session" />
+        </> : <AccessDialog label="Iniciar sesión" title="Accede a la League" navigation>
           <AccessContent />
-        </AccessDialog>
+        </AccessDialog>}
       </nav>
     </header>
   );

@@ -3,8 +3,9 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
-export function ManagementForm({ action, values = {}, children, label, onCommit }: {
+export function ManagementForm({ action, values = {}, children, label, onCommit, className = "management-form" }: {
   action: string; values?: Record<string, string>; children?: ReactNode; label: string;
+  className?: string;
   onCommit?: (commit: { sha: string; branch: string }) => void;
 }) {
   const router = useRouter();
@@ -56,7 +57,7 @@ export function ManagementForm({ action, values = {}, children, label, onCommit 
       setFailed(true); setMessage("No se pudo conectar. Comprueba el estado antes de repetir la operación.");
     } finally { setPending(false); }
   }
-  return <form onSubmit={submit} className="management-form">
+  return <form onSubmit={submit} className={className}>
     {children}
     <button type="submit" disabled={pending}>{pending ? "Procesando…" : label}</button>
     {message ? <p role={failed ? "alert" : "status"}>{message}</p> : null}

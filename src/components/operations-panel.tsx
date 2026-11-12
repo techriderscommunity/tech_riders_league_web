@@ -30,15 +30,16 @@ export async function OperationsPanel({ user, teamId, search = "" }: { user: Use
   const github = await githubDashboard(user, teamId);
   const staff = !teamId;
   const accountOptions = data.accounts.map(p => <option value={p.id} key={p.id}>{p.first_name} {p.last_name} · {p.email}</option>);
+  const participantOptions = data.accounts.filter(p => !p.is_owner && !["pending", "approved"].includes(p.staff_status)).map(p => <option value={p.id} key={p.id}>{p.first_name} {p.last_name} · {p.email}</option>);
   if (data.season.retired_at) return <section><h2>Temporada archivada</h2><p>Se han retirado los datos personales de participación. El ranking histórico permanece anonimizado.</p></section>;
   return <>
-    <section><h2>{staff ? "Operación de equipos y mundos" : "Mundos de mi equipo"}</h2>
+    <details className="management-section" open={!staff || Boolean(search)}><summary>{staff ? "Operación de equipos y mundos" : "Mundos de mi equipo"}</summary>
       {staff ? <form method="get" className="management-form"><label>Buscar equipo<input name="equipo" type="search" /></label><button>Buscar</button></form> : null}
       {staff ? <a className="button-link" href="/api/gestion/export">Exportar equipos y asistencia (CSV para Excel)</a> : null}
       {!data.views.length ? <p>No hay equipos aprobados disponibles.</p> : null}
       {data.views.filter(v => v.team.name.toLocaleLowerCase("es").includes(search.toLocaleLowerCase("es"))).map(view => <details key={view.team.id} className="management-card" open={!staff}>
         <summary>{view.team.name} · {view.eligibility.worlds}/4 mundos válidos · {view.eligibility.eligible ? "Candidato a la final" : "Aún no candidato"}</summary>
-        {!view.team.captain_active ? <p role="status">Nuevo capitán pendiente de activar su contraseña. El anterior ya no puede gestionar. Si el enlace ha caducado, usa «¿Has olvidado tu contraseña?» en Login para solicitar otro.</p> : null}
+        {!view.team.captain_active ? <p role="status">Nuevo capitán pendiente de activar su contraseña. El anterior ya no puede gestionar. Si el enlace ha caducado, usa «¿Has olvidado tu contraseña?» en Iniciar sesión para solicitar otro.</p> : null}
         <h3>Plantilla e historial</h3>
         <ul>{view.originals.map(p => <li key={p.id}>{p.first_name} {p.last_name} · {p.original ? "Original" : "Relevo por fuerza mayor"} · {p.active ? "Activo" : "Baja lógica"}</li>)}</ul>
         {!staff && view.team.captain_id === user.id && view.team.captain_active ? <section>
@@ -107,18 +108,18 @@ export async function OperationsPanel({ user, teamId, search = "" }: { user: Use
         </ManagementForm> : null}
         {staff ? <ManagementForm action="replace-member" values={{ teamId: view.team.id }} label="Aprobar relevo por fuerza mayor">
           <label>Integrante que causa baja<select name="previousId" required>{view.originals.filter(p => p.active).map(p => <option value={p.id} key={p.id}>{p.first_name} {p.last_name}</option>)}</select></label>
-          <label>Cuenta verificada de relevo<select name="nextId" required>{accountOptions}</select></label><Reason />
+          <label>Cuenta verificada de relevo<select name="nextId" required>{participantOptions}</select></label><Reason />
           <p>El relevo no se convierte en original ni concede continuidad ficticia. No puede seguir activo en otro equipo.</p>
         </ManagementForm> : null}
       </details>)}
-    </section>
-    <section><h2>Cambios de capitán</h2><ul>{data.changes.map(c => <li key={c.id}>{c.reason} · {c.status} · {c.review_reason}
+    </details>
+    <details className="management-section"><summary>Cambios de capitán</summary><ul>{data.changes.map(c => <li key={c.id}>{c.reason} · {c.status} · {c.review_reason}
       {staff && c.status === "pending" ? <ManagementForm action="review-captain" values={{ id: c.id }} label="Resolver cambio">
         <label>Decisión<select name="status"><option value="approved">Aprobar y enviar activación</option><option value="rejected">Rechazar</option></select></label><Reason />
       </ManagementForm> : null}
-    </li>)}</ul></section>
+    </li>)}</ul></details>
     {staff ? <>
-      <section><h2>Retos y cierre de eventos</h2>
+      <details className="management-section"><summary>Retos y cierre de eventos</summary>
         {data.events.map(event => {
           const c = data.challenges.find(ch => ch.event_id === event.id);
           return <details className="management-card" key={event.id}><summary>{event.name}</summary>
@@ -136,8 +137,8 @@ export async function OperationsPanel({ user, teamId, search = "" }: { user: Use
             {!event.evaluation_closed ? <ManagementForm action="close-evaluation" values={{ eventId: event.id }} label="Cerrar evaluación de este mundo"><Reason /></ManagementForm> : null}
           </details>;
         })}
-      </section>
-      <section><h2>Publicar soluciones seleccionadas · Top 3 por mundo</h2>
+      </details>
+      <details className="management-section"><summary>Publicar soluciones seleccionadas · Top 3 por mundo</summary>
         <p>Solo después de cerrar la evaluación y publicar el ranking. Selecciona una carpeta del SHA definitivo, descarga el snapshot y revisa su contenido y derechos. La autorización crea una rama pública y un PR borrador en el repositorio oficial; nunca hace público el repositorio del equipo ni integra automáticamente el PR.</p>
         <ManagementForm action="prepare-solution" label="Preparar manifiesto privado de publicación">
           <label>Entrega GitHub definitiva<select name="submissionId" required>{data.submissions.filter(s => s.commit_sha && s.current && s.status === "approved").map(s => <option key={s.id} value={s.id}>{s.event_id} · {data.views.find(v => v.team.id === s.team_id)?.team.name} · {s.commit_sha}</option>)}</select></label>
@@ -156,20 +157,20 @@ export async function OperationsPanel({ user, teamId, search = "" }: { user: Use
           {job.pr_url ? <a href={job.pr_url} target="_blank" rel="noopener noreferrer">Revisar PR en el repositorio oficial</a> : null}
           {job.pr_number ? <ManagementForm action="sync-solution" values={{ id: job.id }} label="Comprobar integración del PR" /> : null}
         </details>)}
-      </section>
-      <section><h2>Revisión y publicación de resultados</h2>
+      </details>
+      <details className="management-section"><summary>Revisión y publicación de resultados</summary>
         <p>Publica primero los mundos y después la global. Una corrección retira la publicación afectada hasta revisarla de nuevo. Las posiciones nunca se deciden automáticamente si hay empate.</p>
         {data.previews.map(({ event, preview }) => <details key={event.id}><summary>{event.name}</summary>
           {preview.bonus.pending ? <RankingReview scope={`bonus:${event.id}`} preview={preview.bonus} /> : null}
           <RankingReview scope={event.id} preview={preview} />
         </details>)}
         {data.global ? <RankingReview scope="global" preview={data.global} /> : null}
-      </section>
-      <section><h2>Vouchers y premios</h2>
+      </details>
+      <details className="management-section"><summary>Vouchers y premios</summary>
         <p>El sorteo se realiza por organización; aquí se registra la adjudicación tras comprobar presencia al final y el cupo 5/5/5/5/10.</p>
         <ManagementForm action="award" values={{ kind: "voucher" }} label="Registrar voucher adjudicado">
           <label>Mundo<select name="eventId">{data.events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>
-          <label>Persona<select name="userId" required>{accountOptions}</select></label>
+          <label>Persona<select name="userId" required>{participantOptions}</select></label>
           <label>Descripción<input name="description" maxLength={500} required /></label><Reason />
         </ManagementForm>
         <ManagementForm action="award" values={{ kind: "prize" }} label="Registrar premio de podio">
@@ -183,8 +184,8 @@ export async function OperationsPanel({ user, teamId, search = "" }: { user: Use
           </ManagementForm>
           <ManagementForm action="award" values={{ id: a.id }} label="Retirar adjudicación"><label className="management-check"><input type="checkbox" name="remove" required />Confirmo retirada</label><Reason /></ManagementForm>
         </li>)}</ul>
-      </section>
-      <section><h2>Comunidades y bajas</h2>
+      </details>
+      <details className="management-section"><summary>Comunidades y bajas</summary>
         <ul>{data.communities.map(c => <li key={c.name}>{c.name} · {c.active ? "Activa" : "Baja oficial"}</li>)}</ul>
         <ManagementForm action="community-state" label="Guardar estado oficial de comunidad">
           <label>Comunidad<input name="name" maxLength={120} required /></label><label className="management-check"><input name="active" type="checkbox" defaultChecked />Comunidad activa</label><Reason />
@@ -196,8 +197,8 @@ export async function OperationsPanel({ user, teamId, search = "" }: { user: Use
           <p>{data.accounts.find(a => a.id === w.user_id)?.email ?? w.user_id}: {w.reason}</p>
           <label>Decisión<select name="status"><option value="completed">Completar baja y anonimizar</option><option value="rejected">No completar (explicar motivo)</option></select></label><Reason />
         </ManagementForm>)}
-      </section>
-      <section><h2>Colaboradores, aportaciones y recursos</h2>
+      </details>
+      <details className="management-section"><summary>Colaboradores, aportaciones y recursos</summary>
         <p>No se comparten datos de participantes con sponsors. Solo se publica el recurso si hay autorización explícita.</p>
         {[null, ...data.contributions].map(c => <ManagementForm key={c?.id ?? "new"} action="save-contribution" values={c ? { id: c.id } : {}} label={c ? "Actualizar aportación" : "Añadir aportación"}>
           <label>Colaborador<input name="name" maxLength={200} defaultValue={c?.name} required /></label>
@@ -207,15 +208,15 @@ export async function OperationsPanel({ user, teamId, search = "" }: { user: Use
           <label>Recurso o memoria (HTTPS, opcional)<input name="url" type="url" defaultValue={c?.resource_url ?? ""} /></label>
           <label className="management-check"><input name="authorized" type="checkbox" defaultChecked={c?.authorized} />Publicación del recurso autorizada</label>
         </ManagementForm>)}
-      </section>
-      {user.is_owner ? <section><h2>Retención de temporada</h2>
+      </details>
+      {user.is_owner ? <details className="management-section"><summary>Retención de temporada</summary>
         <p>Corte previsto: {new Date(data.season.retention_at).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })}. La retirada conserva cuentas de staff activo, elimina datos operativos personales y sustituye los nombres del ranking por alias históricos.</p>
         <ManagementForm action="set-retention" label="Configurar inicio de próxima temporada">
           <label>Fecha ISO con zona horaria<input name="date" required /></label>
         </ManagementForm>
         <ManagementForm action="retire-season" label="Ejecutar retirada al llegar el corte"><label className="management-check"><input name="confirmed" type="checkbox" required />Confirmo la retirada irreversible de datos de esta temporada</label></ManagementForm>
-      </section> : null}
-      <details><summary>Auditoría de las últimas 100 operaciones</summary><ul>{data.audits.map(a => <li key={a.id}>{new Date(a.created_at).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })} · {a.action}<pre className="management-text">{JSON.stringify(a.details)}</pre></li>)}</ul></details>
+      </details> : null}
+      <details className="management-section"><summary>Auditoría de las últimas 100 operaciones</summary><ul>{data.audits.map(a => <li key={a.id}>{new Date(a.created_at).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })} · {a.action}<pre className="management-text">{JSON.stringify(a.details)}</pre></li>)}</ul></details>
     </> : <section><h2>Historial de entregas</h2><ul>{data.submissions.map(s => <li key={s.id}>{s.event_id} · {s.kind} · {s.status} · {s.current ? "Actual" : "Versión anterior"} · {new Date(s.submitted_at).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })}</li>)}</ul></section>}
   </>;
 }

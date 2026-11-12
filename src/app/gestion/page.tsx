@@ -16,15 +16,16 @@ export default async function GestionPage({ searchParams }: { searchParams: Prom
   const params = await searchParams;
   return <article className="page-content management-page">
     <h1>Gestión de la League</h1>
-    <Link href="/mi-equipo">Mi cuenta y equipo</Link>
-    <section><h2>Solicitudes de staff</h2>
+    <p>Bienvenido, {user.first_name}. Elige una sección para desplegar sus herramientas.</p>
+    <Link href="/mi-equipo">Mi cuenta</Link>
+    <details className="management-section"><summary>Solicitudes de staff <span>{data.staff.filter(person => person.staff_status === "pending").length} pendientes</span></summary>
       {!data.staff.length ? <p>No hay solicitudes pendientes.</p> : data.staff.map(person => <section key={person.id} className="management-card">
         <h3>{person.first_name} {person.last_name}</h3><p>{person.email} · {person.community} · {person.staff_status}</p>
         {person.staff_status === "pending" ? <ManagementForm action="review" values={{ id: person.id, kind: "staff", status: "approved" }} label="Aprobar staff" /> : null}
         {user.is_owner ? <ManagementForm action="review" values={{ id: person.id, kind: "staff", status: "removed" }} label="Dar de baja del staff" /> : null}
       </section>)}
-    </section>
-    <section><h2>Equipos pendientes de validación</h2>
+    </details>
+    <details className="management-section"><summary>Equipos pendientes de validación <span>{data.teams.length} pendientes</span></summary>
       {!data.teams.length ? <p>No hay equipos pendientes.</p> : data.teams.map(team => <section key={team.id} className="management-card">
         <h3>{team.name}</h3><p>Capitán: {team.captain_email}</p>
         <ul>{team.members.map(member => <li key={member.id}>{member.first_name} {member.last_name} · {member.email}</li>)}</ul>
@@ -36,15 +37,15 @@ export default async function GestionPage({ searchParams }: { searchParams: Prom
           <label>Motivo<textarea name="reason" maxLength={1000} required /></label>
         </ManagementForm>
       </section>)}
-    </section>
+    </details>
     <OperationsPanel user={user} search={params.equipo ?? ""} />
-    <section><h2>Correo pendiente y fallido</h2>
+    <details className="management-section"><summary>Correo pendiente y fallido <span>{data.mails.length} mensajes</span></summary>
       <p>Los correos se guardan antes del envío. Necesitas SMTP autorizado; nunca se consideran entregados solo por crear la invitación.</p>
       <ManagementForm action="send-mail" label="Procesar correo pendiente" />
       <ul>{data.mails.map(mail => <li key={mail.id}>{mail.recipient} · {mail.subject} · {mail.status}
         {mail.last_error ? <p role="alert">{mail.last_error}</p> : null}
         {mail.status === "failed" ? <ManagementForm action="retry-mail" values={{ id: mail.id }} label="Volver a poner en cola" /> : null}
       </li>)}</ul>
-    </section>
+    </details>
   </article>;
 }

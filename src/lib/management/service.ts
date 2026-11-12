@@ -25,6 +25,14 @@ async function audit(client: PoolClient, actor: string | null, action: string, t
 export function requireStaff(user: User) {
   if (!user.verified_at || user.staff_status !== "approved") throw new ManagementError("Acceso exclusivo de staff aprobado.", 403);
 }
+export async function requireParticipant(client: PoolClient, id: string) {
+  const found = await client.query<{ is_owner: boolean; staff_status: User["staff_status"] }>(
+    "SELECT is_owner,staff_status FROM users WHERE id=$1 FOR UPDATE", [id]);
+  const person = found.rows[0];
+  if (!person || person.is_owner || ["pending", "approved"].includes(person.staff_status)) {
+    throw new ManagementError("El responsable y el staff, incluidas las solicitudes pendientes, no pueden participar en equipos.", 403);
+  }
+}
 export async function sessionUser(value: string | undefined): Promise<User | undefined> {
   if (!value || !/^[a-f0-9]{64}$/.test(value)) return undefined;
   const result = await database().query<User>(
@@ -42,6 +50,7 @@ export async function limit(key: string, maximum = 10) {
   if (result.rows[0].count > maximum) throw new ManagementError("Demasiados intentos. Espera 15 minutos.", 429);
 }
 async function captainTeam(client: PoolClient, user: User, id: string) {
+  await requireParticipant(client, user.id);
   const result = await client.query<{ id: string; name: string; status: string; captain_id: string; captain_active: boolean }>(
     "SELECT id,name,status,captain_id,captain_active FROM teams WHERE id=$1 FOR UPDATE", [uuid(id)]);
   const team = result.rows[0];
@@ -127,7 +136,7 @@ export async function createTeam(user: User, input: Input) {
   const name = teamName(input.name);
   return transaction(async client => {
     await client.query("SELECT pg_advisory_xact_lock(742028)");
-    await client.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [user.id]);
+    await requireParticipant(client, user.id);
     const season = await client.query("SELECT 1 FROM seasons WHERE id='2027' AND retired_at IS NULL");
     const current = await client.query("SELECT 1 FROM users WHERE id=$1 AND disabled_at IS NULL AND verified_at IS NOT NULL", [user.id]);
     if (!season.rowCount || !current.rowCount) throw new ManagementError("La cuenta o la temporada no están disponibles.", 403);
@@ -154,6 +163,8 @@ export async function invite(user: User, input: Input) {
     const existing = await client.query(`SELECT m.user_id FROM members m JOIN users u ON u.id=m.user_id WHERE u.email=$1 AND m.season='2027' AND m.active
       UNION ALL SELECT s.user_id FROM substitutions s JOIN users u ON u.id=s.user_id WHERE u.email=$1`, [address]);
     if (existing.rowCount) throw new ManagementError("La persona ya pertenece a un equipo.");
+    const recipient = await client.query<{ id: string }>("SELECT id FROM users WHERE email=$1", [address]);
+    if (recipient.rows[0]) await requireParticipant(client, recipient.rows[0].id);
     const value = token();
     const id = randomUUID();
     await client.query("INSERT INTO invitations(id,team_id,email,token_hash,expires_at) VALUES($1,$2,$3,$4,now()+interval '7 days')",
@@ -168,6 +179,7 @@ export async function acceptInvitation(user: User, input: Input) {
   const value = text(input.token, "Invitación", 64);
   await transaction(async client => {
     await client.query("SELECT pg_advisory_xact_lock(742028)");
+    await requireParticipant(client, user.id);
     // Lock the team before its invitation, matching the captain's mutation order.
     const lookup = await client.query<{ team_id: string }>("SELECT team_id FROM invitations WHERE token_hash=$1", [digest(value)]);
     const found = lookup.rows[0];
@@ -235,6 +247,11 @@ export async function review(user: User, input: Input) {
       const status = input.status;
       if (status !== "approved" && status !== "removed") throw new ManagementError("Estado no válido.");
       if (status === "removed" && !current.is_owner) throw new ManagementError("Solo el responsable inicial puede dar de baja a otro staff.", 403);
+      if (status === "approved") {
+        const participation = await client.query(
+          "SELECT 1 FROM members WHERE user_id=$1 AND active UNION ALL SELECT 1 FROM substitutions WHERE user_id=$1", [id]);
+        if (participation.rowCount) throw new ManagementError("No se puede aprobar staff mientras la persona esté vinculada a un equipo.", 409);
+      }
       const result = await client.query<{ email: string }>(
         `UPDATE users SET staff_status=$2 WHERE id=$1 AND NOT is_owner
          AND staff_status=ANY($3::text[]) AND verified_at IS NOT NULL RETURNING email`,

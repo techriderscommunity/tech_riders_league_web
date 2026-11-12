@@ -51,9 +51,11 @@ test("acceso muestra login y registro/recuperación en diálogos con un solo cor
   const pagina = leer("../src/app/acceso/page.tsx");
   const navigation = leer("../src/components/navegacion.tsx");
   const dialog = leer("../src/components/access-dialog.tsx");
-  assert.match(navigation, /<AccessDialog label="Login" title="Accede a la League" navigation>/);
+  assert.match(navigation, /<AccessDialog label="Iniciar sesión" title="Accede a la League" navigation>/);
   assert.match(navigation, /<AccessContent \/>/);
-  assert.match(pagina, /<AccessContent params=\{await searchParams\} \/>/);
+  assert.match(pagina, /<AccessContent params=\{params\} \/>/);
+  assert.match(acceso, /activation \? \(/);
+  assert.match(navigation, /Cerrar sesión/);
   assert.match(dialog, /aria-haspopup="dialog"/);
   assert.match(acceso, /AccessDialog label="¿No tienes cuenta\? Regístrate"/);
   assert.match(acceso, /AccessDialog label="¿Has olvidado tu contraseña\?"/);

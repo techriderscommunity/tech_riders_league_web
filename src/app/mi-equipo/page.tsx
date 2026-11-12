@@ -13,13 +13,14 @@ export default async function MiEquipoPage({ searchParams }: { searchParams: Pro
   const user = await sessionUser(store.get(process.env.NODE_ENV === "production" ? "__Host-league-session" : "league-session")?.value);
   if (!user) redirect(params.invitacion && /^[a-f0-9]{64}$/.test(params.invitacion) ? `/acceso?invitacion=${params.invitacion}` : "/acceso");
   const data = await dashboard(user);
+  const staffAccount = user.is_owner || ["pending", "approved"].includes(user.staff_status);
   if (data.retired) return <article className="page-content management-page"><h1>Temporada archivada</h1>
     <p>Se han retirado los datos de participación de esta campaña. El ranking se conserva anonimizado.</p>
     {user.staff_status === "approved" ? <Link href="/gestion">Gestión</Link> : null}
     <ManagementForm action="logout" label="Cerrar sesión" />
   </article>;
   return <article className="page-content management-page">
-    <h1>Mi equipo</h1>
+    <h1>{staffAccount ? "Mi cuenta" : "Mi equipo"}</h1>
     {params.github === "error" ? <p role="alert">No se pudo vincular GitHub. Comprueba que sigues siendo el capitán activo, que autorizas la App de lectura solo para tu repositorio privado y vuelve a intentarlo.</p> : null}
     {params.github === "linked" ? <p role="status">GitHub vinculado. Conecta tu repositorio privado si aún no lo has asociado.</p> : null}
     <p>Has entrado como {user.first_name} {user.last_name}.</p>
@@ -35,12 +36,14 @@ export default async function MiEquipoPage({ searchParams }: { searchParams: Pro
     </details>
     {user.staff_status === "pending" ? <p>Tu solicitud de staff está pendiente de aprobación.</p> : null}
     {user.staff_status === "approved" ? <Link className="button-link" href="/gestion">Gestionar la League</Link> : null}
-    {params.invitacion ? <section>
+    {staffAccount ? <p>El responsable y las personas de staff, incluidas las solicitudes pendientes, no participan en equipos.</p> : null}
+    {staffAccount && data.team ? <p role="alert">Esta cuenta tiene una vinculación previa con un equipo. Contacta con organización para resolverla; no se ha modificado automáticamente.</p> : null}
+    {!staffAccount && params.invitacion ? <section>
       <h2>Aceptar invitación</h2>
       <p>Se verificará que está dirigida a tu correo. Si acabas de registrarte, vuelve al enlace de invitación después de confirmar tu correo.</p>
       <ManagementForm action="accept" values={{ token: params.invitacion }} label="Aceptar incorporación a este equipo" />
     </section> : null}
-    {!data.team ? <section>
+    {!staffAccount && (!data.team ? <section>
       <h2>Crear equipo como capitán</h2>
       <p>Si te han invitado, usa el enlace de tu correo en lugar de crear otro equipo.</p>
       <ManagementForm action="create-team" label="Crear equipo">
@@ -68,8 +71,8 @@ export default async function MiEquipoPage({ searchParams }: { searchParams: Pro
         </li>)}</ul>
         <p>Para reenviar una invitación perdida o caducada, cancélala e invita de nuevo.</p>
       </> : null}
-    </section>}
-    {data.team?.status === "approved" ? <OperationsPanel user={user} teamId={data.team.id} /> : null}
+    </section>)}
+    {!staffAccount && data.team?.status === "approved" ? <OperationsPanel user={user} teamId={data.team.id} /> : null}
     {user.staff_status === "approved" && !user.is_owner ? <ManagementForm action="leave-staff" label="Solicitar mi baja de staff (sin dar de baja la comunidad)">
       <label>Motivo<textarea name="reason" maxLength={1000} required /></label>
     </ManagementForm> : null}

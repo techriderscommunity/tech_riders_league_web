@@ -94,6 +94,13 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     await assert.rejects(service.invite(stranger, { teamId, email: "someone@example.test" }));
     await assert.rejects(service.createTeam(stranger, { name: " fixture  TEAM " }));
     await service.createTeam(stranger, { name: "Another Team" });
+    const invitedStaffAddress = "invited-staff@example.test";
+    await service.invite(captain, { teamId, email: invitedStaffAddress });
+    const staffInvitation = await findToken(invitedStaffAddress, "invitacion");
+    const invitedStaff = await verified(invitedStaffAddress, true);
+    await assert.rejects(service.acceptInvitation(invitedStaff, { token: staffInvitation }), /no pueden participar/);
+    const staffInviteId = (await database().query("SELECT id FROM invitations WHERE token_hash=$1", [digest(staffInvitation)])).rows[0].id;
+    await service.cancelInvitation(captain, { teamId, invitationId: staffInviteId });
     for (let i = 0; i < 3; i++) {
       const address = `member${i}@example.test`;
       await service.invite(captain, { teamId, email: address });
@@ -110,12 +117,19 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     await assert.rejects(service.renameTeam(captain, { teamId, name: "Changed during review" }));
 
     const pending = await verified("staff@example.test", true);
+    await assert.rejects(service.createTeam(pending, { name: "Staff team" }), /no pueden participar/);
+    await assert.rejects(service.invite(stranger, { teamId: (await service.dashboard(stranger)).team!.id, email: pending.email }), /no pueden participar/);
     await assert.rejects(service.review(pending, { id: teamId, kind: "team", status: "approved" }));
     const owner = await verified("owner-fixture@example.test");
     await database().query("UPDATE users SET is_owner=true,staff_status='approved' WHERE id=$1", [owner.id]);
     const root: service.User = { ...owner, staff_status: "approved", is_owner: true };
+    await assert.rejects(service.createTeam(owner, { name: "Owner team" }), /no pueden participar/);
+    await database().query("UPDATE users SET staff_status='pending' WHERE id=$1", [stranger.id]);
+    await assert.rejects(service.review(root, { id: stranger.id, kind: "staff", status: "approved" }), /vinculada a un equipo/);
+    await database().query("UPDATE users SET staff_status='none' WHERE id=$1", [stranger.id]);
     await service.review(root, { id: pending.id, kind: "staff", status: "approved" });
     const staff: service.User = { ...pending, staff_status: "approved" };
+    await assert.rejects(service.createTeam(staff, { name: "Approved staff team" }), /no pueden participar/);
     const next = await verified("next-staff@example.test", true);
     await service.review(staff, { id: next.id, kind: "staff", status: "approved" });
     await assert.rejects(service.review(staff, { id: next.id, kind: "staff", status: "removed" }));
@@ -231,7 +245,10 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         const snapshotUrl = `http://localhost:${httpPort}/api/github/snapshot/${githubFixture.submissionId}`;
         assert.equal((await fetch(snapshotUrl)).status, 401);
         assert.equal((await fetch(snapshotUrl, { headers: { Cookie: credentials } })).status, 403);
-        assert.equal((await fetch(`http://localhost:${httpPort}/mi-equipo`, { headers: { Cookie: credentials } })).status, 200);
+        const participantPage = await fetch(`http://localhost:${httpPort}/mi-equipo`, { headers: { Cookie: credentials } });
+        const participantHtml = await participantPage.text();
+        assert.equal(participantPage.status, 200);
+        assert.match(participantHtml, /<nav class="site-nav"[^>]*>[\s\S]*?Mi equipo[\s\S]*?Cerrar sesión[\s\S]*?<\/nav>/);
         assert.equal((await fetch(`http://localhost:${httpPort}/api/gestion/export`)).status, 401);
         assert.equal((await fetch(`http://localhost:${httpPort}/api/gestion/export`, { headers: { Cookie: credentials } })).status, 403);
         const rootLogin = await post("login", { email: root.email, password: "test-password-123" });
@@ -248,6 +265,18 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         const staffPage = await fetch(`http://localhost:${httpPort}/gestion`, { headers: { Cookie: rootCookie } });
         const staffHtml = await staffPage.text();
         assert.equal(staffPage.status, 200);
+        assert.ok(staffHtml.includes("Cerrar sesión") && staffHtml.includes("Mi cuenta"));
+        assert.match(staffHtml, /<details class="management-section"><summary>Solicitudes de staff/);
+        assert.match(staffHtml, /<details class="management-section"><summary>Operación de equipos y mundos/);
+        const ownerPage = await fetch(`http://localhost:${httpPort}/mi-equipo`, { headers: { Cookie: rootCookie } });
+        const ownerHtml = await ownerPage.text();
+        assert.ok(ownerHtml.includes("Mi cuenta") && !ownerHtml.includes("Crear equipo como capitán"));
+        const activationPage = await fetch(`http://localhost:${httpPort}/acceso?token=${"a".repeat(64)}&purpose=reset`);
+        const activationHtml = await activationPage.text();
+        const activationMain = activationHtml.match(/<main id="contenido">([\s\S]*?)<\/main>/)?.[1];
+        assert.ok(activationMain);
+        assert.ok(activationMain.includes("Nueva contraseña"));
+        assert.ok(!activationMain.includes("¿Has olvidado tu contraseña?") && !activationMain.includes("<h2>Entrar</h2>"));
         for (const title of ["Operación de equipos y mundos", "Retos y cierre de eventos", "Vouchers y premios", "Retención de temporada"]) assert.ok(staffHtml.includes(title), `Missing staff surface: ${title}`);
         const csv = await fetch(`http://localhost:${httpPort}/api/gestion/export`, { headers: { Cookie: rootCookie } });
         assert.equal(csv.status, 200);
