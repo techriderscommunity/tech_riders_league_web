@@ -248,7 +248,7 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         const participantPage = await fetch(`http://localhost:${httpPort}/mi-equipo`, { headers: { Cookie: credentials } });
         const participantHtml = await participantPage.text();
         assert.equal(participantPage.status, 200);
-        assert.match(participantHtml, /<nav class="site-nav"[^>]*>[\s\S]*?Mi equipo[\s\S]*?Cerrar sesión[\s\S]*?<\/nav>/);
+        assert.match(participantHtml, /<nav\b[^>]*\bclass="site-nav"[^>]*>[\s\S]*?Mi equipo[\s\S]*?Cerrar sesión[\s\S]*?<\/nav>/);
         assert.equal((await fetch(`http://localhost:${httpPort}/api/gestion/export`)).status, 401);
         assert.equal((await fetch(`http://localhost:${httpPort}/api/gestion/export`, { headers: { Cookie: credentials } })).status, 403);
         const rootLogin = await post("login", { email: root.email, password: "test-password-123" });
