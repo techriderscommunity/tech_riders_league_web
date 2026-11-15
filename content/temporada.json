@@ -89,9 +89,9 @@
         "mensaje": "La fecha se comunicará cuando esté confirmada."
       },
       "comunidad": {
-        "estado": "pendiente",
-        "publicacion": "no-autorizada",
-        "mensaje": "La comunidad anfitriona está pendiente de confirmación."
+        "estado": "confirmado",
+        "publicacion": "autorizada",
+        "valor": "SQL Server Español"
       },
       "descripcion": {
         "estado": "pendiente",
@@ -182,7 +182,7 @@
       "contenido": {
         "estado": "parcial",
         "publicacion": "autorizada",
-        "valor": "Guarandinga está confirmada como anfitriona del Mundo 1 (Negocio y Arquitectura). Las otras tres comunidades siguen pendientes de confirmación."
+        "valor": "Guarandinga está confirmada como anfitriona del Mundo 1 (Negocio y Arquitectura) y SQL Server Español del Mundo 2 (Datos). Las otras dos comunidades siguen pendientes de confirmación."
       }
     },
     "colaboradores": {

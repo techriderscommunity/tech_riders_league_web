@@ -35,6 +35,10 @@ Abre http://localhost:3000. No se usa SQLite ni una base simulada.
 El registro está cerrado por defecto: no activar `REGISTRATION_ENABLED` hasta
 probar el correo, revisar los textos legales y preparar la operación real.
 
+En pantallas estrechas la navegación se recoge bajo «Menú», tanto para visitantes
+como para usuarios con acceso a gestión. Se cierra al elegir un enlace o con
+Escape; el inicio de sesión sigue disponible dentro del menú.
+
 ## Comprobaciones
 
 ```powershell

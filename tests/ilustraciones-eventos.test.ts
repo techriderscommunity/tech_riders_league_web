@@ -43,6 +43,13 @@ test("los logos de las organizaciones están disponibles y tienen referencias ex
   }
 });
 
+test("el Mundo 2 dispone de la imagen de Esekuelechita y su comunidad confirmada", () => {
+  const image = readFileSync(new URL("../public/images/Esekuelechita.png", import.meta.url));
+  assert.equal(image.toString("hex", 0, 8), "89504e470d0a1a0a");
+  assert.match(leer("../src/app/eventos/page.tsx"), /alt="Esekuelechita, guardiana del Reino de los Datos/);
+  assert.match(leer("../src/app/comunidades/page.tsx"), /SQL Server Español/);
+});
+
 test("el mapa de Home conserva el arte numerado para las cinco etapas", () => {
   const home = leer("../src/components/home-priorizada.tsx");
   const component = leer("../src/components/evento-ilustracion.tsx");

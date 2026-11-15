@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { EstadoPublico } from "../../components/estado-publico";
 import {
@@ -72,7 +73,7 @@ export default async function EventosPage({
           id="detalle-etapa"
           aria-labelledby="detalle-titulo"
         >
-          {paradaActiva.etapa?.slug !== "negocio-arquitectura" ? (
+          {paradaActiva.etapa?.slug !== "negocio-arquitectura" && paradaActiva.etapa?.slug !== "datos" ? (
           <div className="adventure-detail-intro">
             <EventoIlustracion
               numero={ilustracionActiva}
@@ -208,8 +209,76 @@ export default async function EventosPage({
               </div>
             </aside>
           ) : null}
+          {paradaActiva.etapa?.slug === "datos" ? (
+            <aside className="world-guide">
+              <Image
+                src="/images/Esekuelechita.png"
+                alt="Esekuelechita, guardiana del Reino de los Datos y representante de SQL Server Español."
+                className="world-guide-image"
+                width={1536}
+                height={1024}
+                sizes="(max-width: 640px) 256px, 384px"
+              />
+              <div>
+                <h2 id="detalle-titulo">El Reino de los Datos</h2>
+                <p><em>
+                  Hay errores que pasarán desapercibidos durante años. Otros empezarán
+                  con un DELETE y terminarán cuando alguien pregunte: «¿Le pusiste el
+                  WHERE, verdad?».
+                </em></p>
+                <p><em>Fragmento de las Crónicas de Codechito</em></p>
+                <p>
+                  Tras abandonar el Reino de las Decisiones, Techito y Codechito
+                  llegarán al <strong>Reino de los Datos</strong>, donde los estará
+                  esperando <strong>Esekuelechita</strong>, guardiana del segundo
+                  mundo y representante de SQL Server Español.
+                </p>
+                <p>
+                  Allí descubrirán un territorio en el que todo dejará huella. Tablas,
+                  documentos, eventos, logs y cantidades ingentes de información que
+                  alguien, en algún momento, decidió guardar <em>«por si acaso»</em>.
+                </p>
+                <p>
+                  Pero Esekuelechita les planteará un reto mucho más interesante que
+                  simplemente almacenar datos: <strong>conseguir que tengan sentido</strong>.
+                </p>
+                <p>
+                  Juntos tendrán que decidir qué información necesitará realmente su
+                  solución, cómo modelarla, dónde almacenarla y cómo convertirla en
+                  algo útil. Por el camino aparecerán <strong>SQL Server, Cosmos DB,
+                  consultas, modelos relacionales y NoSQL</strong>, además de algún
+                  SELECT * que, por supuesto, <em>solo estará ahí temporalmente</em>.
+                </p>
+                <p>Y aprenderán otra regla fundamental del reino:</p>
+                <p><strong>
+                  Antes de ejecutar un DELETE, mira dos veces el WHERE. Luego míralo
+                  una tercera.
+                </strong></p>
+                <p>
+                  Porque los datos que cuiden hoy serán los que mañana les permitirán
+                  construir mejores <strong>dashboards</strong>, explorar información
+                  con <strong>KQL</strong>, descubrir patrones y alimentar soluciones
+                  de <strong>IA</strong> con algo bastante más útil que una montaña
+                  de datos sin contexto.
+                </p>
+                <p>
+                  Techito buscará cómo sacarles valor, Esekuelechita pondrá a prueba
+                  cada decisión y Codechito se encargará de grabar los
+                  descubrimientos… y probablemente algún desastre que otro.
+                </p>
+                <p>
+                  Cuando abandonen este mundo, su solución no solo tendrá arquitectura
+                  y datos.
+                </p>
+                <p><strong>Tendrá conocimiento.</strong></p>
+                <p>Y será el momento de descubrir hasta dónde podrán llevarlo.</p>
+                <p>Sobre sus cabezas, las primeras nubes comenzarán a cubrir el horizonte.</p>
+              </div>
+            </aside>
+          ) : null}
           {paradaActiva.etapa !== undefined &&
-          paradaActiva.etapa.slug !== "negocio-arquitectura" ? (
+          paradaActiva.etapa.slug !== "negocio-arquitectura" &&
+          paradaActiva.etapa.slug !== "datos" ? (
             <EstadoPublico
               dato={paradaActiva.etapa.descripcion}
               titulo="Agenda y detalles"

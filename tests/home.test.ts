@@ -39,7 +39,8 @@ test("la Home conserva los datos autorizados sin avisos de fecha ni próxima par
   assert.ok(typeof comunidadesPublicadas === "string");
   assert.match(comunidadesPublicadas, /Guarandinga/);
   assert.match(comunidadesPublicadas, /Mundo 1/);
-  assert.match(comunidadesPublicadas, /tres comunidades siguen pendientes/);
+  assert.match(comunidadesPublicadas, /SQL Server Español/);
+  assert.match(comunidadesPublicadas, /dos comunidades siguen pendientes/);
   assert.ok(seguridad);
   assert.equal(seguridad?.fecha.estado, "pendiente");
   assert.equal(valorPublicado(seguridad.fecha), "2027-04-10");
@@ -93,6 +94,10 @@ test("la Home sigue la referencia visual sin presentar contenido pendiente como 
   assert.match(sponsors, /\/images\/tajamar-logo\.svg/);
   assert.equal(temporadaPublica.secciones.colaboradores.contenido.publicacion, "autorizada");
   assert.match(home, /"Comunidad pendiente"/);
+  assert.match(home, /canal: "https:\/\/www\.youtube\.com\/@SQLServerEspanol"/);
+  assert.match(home, /logo: "\/images\/sql-server-espanol-logo\.png"/);
+  assert.match(home, /src=\{comunidad\.logo\}/);
+  assert.equal(readFileSync(new URL("../public/images/sql-server-espanol-logo.png", import.meta.url)).toString("hex", 0, 8), "89504e470d0a1a0a");
   assert.match(home, /\/images\/guarandinga-logo\.jpg/);
   assert.match(home, /canal: "https:\/\/www\.youtube\.com\/@GuarandingaTECH"/);
   assert.match(home, /href=\{"canal" in comunidad \? comunidad\.canal/);

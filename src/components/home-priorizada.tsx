@@ -83,9 +83,13 @@ const comunidades = [
   {
     nombre: "Guarandinga",
     canal: "https://www.youtube.com/@GuarandingaTECH",
-    etapa: "negocio-arquitectura",
+    logo: "/images/guarandinga-logo.jpg",
   },
-  { nombre: "Comunidad pendiente", estado: "Por confirmar" },
+  {
+    nombre: "SQL Server Español",
+    canal: "https://www.youtube.com/@SQLServerEspanol",
+    logo: "/images/sql-server-espanol-logo.png",
+  },
   { nombre: "Comunidad pendiente", estado: "Por confirmar" },
   { nombre: "Comunidad pendiente", estado: "Por confirmar" },
 ] as const;
@@ -251,10 +255,10 @@ export function HomePriorizada() {
               key={`${comunidad.nombre}-${index}`}
               aria-label={comunidad.nombre}
             >
-              {"etapa" in comunidad ? (
+              {"canal" in comunidad ? (
                 <Image
-                  src="/images/guarandinga-logo.jpg"
-                  alt="Logo oficial de Guarandinga Tech"
+                  src={comunidad.logo}
+                  alt={`Logo de ${comunidad.nombre}`}
                   className={styles.communityLogo}
                   width={900}
                   height={900}

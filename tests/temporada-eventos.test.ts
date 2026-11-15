@@ -40,7 +40,10 @@ test("las etapas mantienen los estados reales de fecha y comunidad", () => {
   const datos = obtenerEvento("datos");
   assert.ok(datos);
   assert.equal(valorPublicado(datos.nombre), "Datos");
-  assert.equal(datos.comunidad.publicacion, "no-autorizada");
+  assert.equal(datos.comunidad.publicacion, "autorizada");
+  assert.equal(valorPublicado(datos.comunidad), "SQL Server Español");
+  assert.equal(datos.fecha.publicacion, "no-autorizada");
+  assert.equal(datos.descripcion.publicacion, "no-autorizada");
 
   const cloud = obtenerEvento("cloud");
   assert.ok(cloud);
@@ -93,6 +96,10 @@ test("el mapa permite seleccionar cinco paradas y mantiene los detalles en una p
   assert.match(listado, /ningún microservicio ha resultado herido/);
   assert.match(listado, /Y los tres pondrán rumbo a su siguiente aventura/);
   assert.match(listado, /<h2 id="detalle-titulo">El Reino de las Decisiones<\/h2>/);
+  assert.match(listado, /<h2 id="detalle-titulo">El Reino de los Datos<\/h2>/);
+  assert.match(listado, /\/images\/Esekuelechita\.png/);
+  assert.match(listado, /SQL Server Español/);
+  assert.match(listado, /Tendrá conocimiento\./);
   assert.doesNotMatch(listado, /Capítulo I/);
   assert.match(listado, /Pendiente de confirmar/);
   assert.doesNotMatch(listado, /<EstadoPublico dato=\{paradaActiva\.etapa\.fecha\}/);

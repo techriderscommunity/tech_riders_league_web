@@ -63,6 +63,9 @@ test("la clasificación y participación conservan sus estados pendientes", () =
   for (const texto of ["Misión 01", "Misión 02", "Misión 03", "validación será manual", "eventosInscripcion.map", "Objetivo:", "Al completarla:"]) {
     assert.ok(participacionPage.includes(texto));
   }
+  const estilosInscripcion = readFileSync(new URL("../src/app/participacion/participacion.module.css", import.meta.url), "utf8");
+  assert.match(estilosInscripcion, /grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(estilosInscripcion, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.doesNotMatch(participacionPage, /Estado de participación|Cuando se aprueben el proceso/);
   assert.ok(participacionPage.indexOf('id="inscripcion"') < participacionPage.indexOf('id="reglamento"'));
 

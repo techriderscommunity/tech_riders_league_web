@@ -73,6 +73,16 @@ export default function ComunidadesPage() {
             </Link>
           </div>
         </article>
+        <article className="card community-confirmed">
+          <div>
+            <p className="community-role">Mundo 2 · Datos</p>
+            <h3>SQL Server Español</h3>
+            <p>Comunidad anfitriona confirmada del Mundo 2.</p>
+            <Link href="/eventos?etapa=datos#detalle-etapa">
+              Ver Mundo 2 en el mapa
+            </Link>
+          </div>
+        </article>
         <div className="page-data">
           <EstadoPublico
             dato={comunidades.contenido}

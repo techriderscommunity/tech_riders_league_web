@@ -5,6 +5,7 @@ import { AccessContent } from "./access-content";
 import { cookies } from "next/headers";
 import { sessionUser } from "../lib/management/service";
 import { ManagementForm } from "./management-form";
+import { MenuNavegacion } from "./menu-navegacion";
 
 const enlaces = [
   ["Mapa de la aventura", "/eventos"],
@@ -32,7 +33,7 @@ export async function Navegacion() {
           priority
         />
       </Link>
-      <nav className="site-nav" aria-label="Navegación principal">
+      <MenuNavegacion>
         {enlaces.map(([label, href], indice) => (
           <Link key={href} href={href}>
             <svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24">
@@ -54,7 +55,7 @@ export async function Navegacion() {
         </> : <AccessDialog label="Iniciar sesión" title="Accede a la League" navigation>
           <AccessContent />
         </AccessDialog>}
-      </nav>
+      </MenuNavegacion>
     </header>
   );
 }

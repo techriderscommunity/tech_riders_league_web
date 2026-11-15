@@ -9,10 +9,15 @@ const leer = (path: string) =>
 test("el layout ofrece navegación semántica y salto al contenido", () => {
   const layout = leer("../src/app/layout.tsx");
   const navigation = leer("../src/components/navegacion.tsx");
+  const menu = leer("../src/components/menu-navegacion.tsx");
   assert.match(layout, /<html lang="es">/);
   assert.match(layout, /href="#contenido"/);
   assert.match(layout, /<main id="contenido">/);
-  assert.match(navigation, /aria-label="Navegación principal"/);
+  assert.match(menu, /aria-label="Navegación principal"/);
+  assert.match(menu, /aria-controls="navegacion-principal"/);
+  assert.match(menu, /aria-expanded=\{abierto\}/);
+  assert.match(menu, /event\.key === "Escape"/);
+  assert.match(navigation, /<MenuNavegacion>/);
   assert.doesNotMatch(layout, /Los contenidos pendientes se publicarán/);
   assert.match(layout, /<address>Tajamar · Calle Pío Felipe, 12 · 28038 Madrid<\/address>/);
   assert.match(layout, /https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=/);
@@ -73,6 +78,8 @@ test("los estilos mantienen foco visible, reflow móvil y movimiento reducido", 
   assert.match(css, /\.site-header\s*\{[^}]*position: sticky;[^}]*top: 0;/);
   assert.match(css, /scroll-padding-top:/);
   assert.match(css, /@media \(max-width: 40rem\)/);
+  assert.match(css, /@media \(max-width: 70rem\)/);
+  assert.match(css, /\.site-nav\[data-open="false"\]\s*\{\s*display: none;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /--cyan:/);
   assert.doesNotMatch(css, /min-width:\s*20rem/);
