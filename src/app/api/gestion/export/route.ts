@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { sessionUser, requireStaff } from "../../../../lib/management/service";
+import { sessionUser, requireLeagueAdmin } from "../../../../lib/management/service";
 import { database } from "../../../../lib/management/db";
 import { ManagementError } from "../../../../lib/management/validation";
 
@@ -14,7 +14,7 @@ export async function GET() {
     const store = await cookies();
     const user = await sessionUser(store.get(process.env.NODE_ENV === "production" ? "__Host-league-session" : "league-session")?.value);
     if (!user) throw new ManagementError("Debes iniciar sesión.", 401);
-    requireStaff(user);
+    requireLeagueAdmin(user);
     const data = await database().query<{ team: string; status: string; world: string; first_name: string; last_name: string; email: string; original: boolean; active: boolean; luma: boolean; present: boolean; at_end: boolean }>(
       `SELECT t.name AS team,t.status,e.name AS world,u.first_name,u.last_name,u.email,r.original,r.active,
         COALESCE(a.luma,false) AS luma,COALESCE(a.present,false) AS present,COALESCE(a.at_end,false) AS at_end

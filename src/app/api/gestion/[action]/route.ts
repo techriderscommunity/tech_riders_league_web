@@ -54,11 +54,15 @@ export async function POST(request: Request, context: { params: Promise<{ action
       store.set(cookieName, "", { ...cookieOptions, maxAge: 0 });
       return NextResponse.json({ message: "Sesión cerrada.", redirect: "/acceso" });
     }
-    const eventOperation = user.staff_status === "approved" && ["attendance", "review-evidence"].includes(action);
+    const eventOperation = user.staff_status === "approved" && ["attendance", "review-evidence", "save-evaluation", "finalize-evaluation", "save-rubric", "publish-rubric"].includes(action);
     await service.limit(`user:${user.id}:${action}`, eventOperation ? 600 : 30);
     if (["review", "send-mail", "retry-mail"].includes(action)) {
-      service.requireStaff(user);
-      if (action === "review") await service.review(user, input);
+      if (action === "review") {
+        service.requireStaff(user);
+        await service.review(user, input);
+      } else {
+        service.requireLeagueAdmin(user);
+      }
       if (action === "send-mail") {
         const sent = await sendQueuedMail();
         return NextResponse.json({ message: `${sent} mensajes aceptados por el servicio de correo.` });
@@ -86,7 +90,10 @@ export async function POST(request: Request, context: { params: Promise<{ action
         case "request-captain": await operations.requestCaptain(user, input); break;
         case "review-captain": await operations.reviewCaptain(user, input); break;
         case "replace-member": await operations.replaceMember(user, input); break;
-        case "save-challenge": await operations.saveChallenge(user, input); break;
+        case "save-rubric": await operations.saveRubric(user, input); break;
+        case "publish-rubric": await operations.publishRubric(user, input); break;
+        case "save-evaluation": await operations.saveEvaluation(user, input); break;
+        case "finalize-evaluation": await operations.finalizeEvaluation(user, input); break;
         case "submit-evidence": await operations.submitEvidence(user, input); break;
         case "github-link": {
           const session = store.get(cookieName)?.value;
@@ -109,11 +116,16 @@ export async function POST(request: Request, context: { params: Promise<{ action
         case "leave-staff": await operations.leaveStaff(user, input); break;
         case "community-state": await operations.communityState(user, input); break;
         case "staff-community": await operations.addStaffCommunity(user, input); break;
+        case "create-community": await service.createCommunity(user, input); break;
+        case "community-role": await service.setCommunityRole(user, input); break;
+        case "assign-community-world": await service.assignCommunityWorld(user, input); break;
+        case "update-staff-worlds": await service.updateStaffWorlds(user, input); break;
+        case "grant-league-admin": await service.grantLeagueAdmin(user, input); break;
+        case "revoke-league-admin": await service.revokeLeagueAdmin(user, input); break;
         case "request-withdrawal": await operations.requestWithdrawal(user, input); break;
         case "update-profile": await operations.updateProfile(user, input); break;
         case "review-withdrawal": await operations.reviewWithdrawal(user, input); break;
         case "save-contribution": await operations.saveContribution(user, input); break;
-        case "set-retention": await operations.setRetention(user, input); break;
         case "retire-season":
           if (input.confirmed !== true) throw new ManagementError("Confirma la retirada irreversible de los datos.");
           await operations.retireSeason(user); break;

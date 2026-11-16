@@ -1,0 +1,2129 @@
+.shell {
+  --intranet-bg: #06172e;
+  --intranet-panel: #09213f;
+  --intranet-line: #174477;
+  --intranet-text: #e6f4ff;
+  --intranet-muted: #9ab8d5;
+  --intranet-cyan: #20c9f4;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: clamp(11rem, 18vw, 14rem) minmax(0, 1fr);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: calc(100vh - 3.75rem);
+  margin: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #2163a0;
+  border-radius: 0;
+  background: var(--intranet-bg);
+  box-shadow: 0 0.75rem 2rem rgb(16 41 67 / 10%);
+  color: var(--intranet-text);
+}
+
+.sidebar {
+  min-width: 0;
+  padding: 1.1rem 0.55rem;
+  border-right: 1px solid var(--intranet-line);
+  background:
+    linear-gradient(180deg, rgb(9 38 72 / 85%), rgb(5 20 40 / 96%)),
+    repeating-linear-gradient(0deg, transparent 0 15px, rgb(30 103 162 / 10%) 15px 16px);
+}
+
+.sideNav {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.navGroup {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.navGroup + .navGroup {
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--intranet-line);
+}
+
+.navGroupLabel {
+  padding-inline: 0.65rem;
+  color: #71a9d1;
+  font-family: "Courier New", monospace;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.sideNav a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.55rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 0.3rem;
+  color: #b4cbe0;
+  font-size: 0.79rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.navMark {
+  flex: 0 0 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid #58bde9;
+  border-radius: 0.1rem;
+  background: #0f4975;
+  box-shadow: 0 0 0.45rem rgb(32 201 244 / 25%);
+}
+
+.navIcon {
+  flex: 0 0 1rem;
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.sideNav a:hover {
+  border-color: #20578b;
+  background: #0b2b50;
+  color: #fff;
+}
+
+.sideNav a[aria-current="page"] {
+  border-color: #1b7eb5;
+  background: linear-gradient(90deg, #0d4773, #0a2b50);
+  box-shadow: inset 3px 0 #23cff7, 0 0 1rem rgb(25 165 226 / 12%);
+  color: #fff;
+}
+
+.sideNav a[aria-current="page"] .navMark {
+  border-color: #a2edff;
+  background: #23cff7;
+}
+
+.workspace {
+  min-width: 0;
+  padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem;
+  background:
+    radial-gradient(ellipse at 84% 0%, rgb(18 126 197 / 19%), transparent 28rem),
+    linear-gradient(180deg, #061a34, #071b33 72%, #06162a);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 3.8rem;
+  border-bottom: 1px solid var(--intranet-line);
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--intranet-text);
+  text-decoration: none;
+}
+
+.account:hover {
+  color: var(--intranet-cyan);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 2px solid #f4c450;
+  border-radius: 50%;
+  background: #0c3152;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.accountText {
+  display: grid;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.accountText small {
+  color: var(--intranet-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.65rem 0 1.15rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: #4dd7ff;
+  font-family: "Courier New", monospace;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.heading h1 {
+  margin: 0;
+  color: #f1f8ff;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.heading p:last-child {
+  max-width: 48rem;
+  margin: 0.5rem 0 0;
+  color: #9eb8d2;
+  font-size: 0.9rem;
+}
+
+.seasonBadge {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #1d7bb1;
+  border-radius: 99rem;
+  background: #0b355a;
+  color: #74ddff;
+  font-family: "Courier New", monospace;
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.metric {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--intranet-line);
+  border-top: 3px solid var(--intranet-cyan);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0c2a4c, #081d38);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 0.35rem 1rem rgb(0 0 0 / 18%);
+}
+
+.metric strong {
+  color: #f2f9ff;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.metric span {
+  color: #9ab8d5;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.content {
+  min-width: 0;
+}
+
+.screenGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.screenCard {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--intranet-line);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0b2747, #081d38);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 0.35rem 1rem rgb(0 0 0 / 18%);
+}
+
+.screenCard h2,
+.screenCard h3 {
+  margin-top: 0;
+}
+
+.screenCardLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 140ms ease, transform 140ms ease, background-color 140ms ease;
+}
+
+.screenCardLink:hover {
+  transform: translateY(-2px);
+  border-color: #28c5f0;
+  background: #0c2d50;
+}
+
+.screenCardLink h2,
+.screenCardLink h3 {
+  color: #e9f7ff;
+}
+
+.featureCard {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 34%);
+  align-items: center;
+  gap: 1rem;
+  min-height: 10rem;
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+  border: 1px solid #1977b5;
+  border-radius: 0.4rem;
+  background:
+    radial-gradient(ellipse at 70% 50%, rgb(10 125 205 / 28%), transparent 58%),
+    linear-gradient(110deg, #0b2a4d, #071b34);
+  box-shadow: inset 0 1px rgb(255 255 255 / 4%), 0 0.45rem 1.1rem rgb(0 0 0 / 20%);
+}
+
+.featureCard h2 {
+  margin: 0.25rem 0;
+  color: #f0f8ff;
+}
+
+.featureCard img {
+  width: 100%;
+  max-height: 9rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.featureLabel {
+  margin: 0;
+  color: #48d8ff;
+  font-family: "Courier New", monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid #2ba876;
+  border-radius: 99rem;
+  background: #104a45;
+  color: #a4f5c5;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.profileHeadingActions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.profileQuote {
+  max-width: 16rem;
+  margin: 0;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid #1977b5;
+  background: linear-gradient(110deg, #0b2a4d, #071b34);
+  color: #b6d4f1;
+  font-size: 0.84rem;
+  font-style: italic;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.profileEditButton {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.profileDashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.profilePanel {
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--intranet-line);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0b2747, #081d38);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 0.35rem 1rem rgb(0 0 0 / 18%);
+}
+
+.profilePanel h2 {
+  margin: 0 0 0.75rem;
+  color: #e9f7ff;
+  font-size: 1rem;
+}
+
+.profileIdentity {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  align-content: start;
+  gap: 0.9rem;
+}
+
+.profilePortraitFrame {
+  display: grid;
+  place-items: center;
+}
+
+.profilePortrait {
+  width: 7rem;
+  height: 7rem;
+  border: 2px solid #1485bb;
+  border-radius: 50%;
+  background: #0c3152;
+  object-fit: cover;
+  object-position: 50% 43%;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 0.25rem #0a355d, 0 0 1.2rem rgb(32 201 244 / 22%);
+}
+
+.profileIdentityDetails {
+  min-width: 0;
+}
+
+.profileIdentityDetails h2 {
+  margin: 0 0 0.15rem;
+  font-size: 1.05rem;
+}
+
+.profileEmail {
+  margin: 0 0 0.3rem;
+  color: #b4cbe0;
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+.profileRole {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99rem;
+  background: #edc83d;
+  color: #152335;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.profileFacts {
+  display: grid;
+  margin: 0.2rem 0 0;
+}
+
+.profileFacts > div {
+  display: grid;
+  grid-template-columns: minmax(5rem, 0.65fr) minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-top: 1px solid rgb(35 93 141 / 50%);
+  font-size: 0.72rem;
+}
+
+.profileFacts dt {
+  color: #8fb0cf;
+}
+
+.profileFacts dd {
+  margin: 0;
+  color: #d7e9f8;
+  overflow-wrap: anywhere;
+}
+
+.profileFacts a {
+  color: #bdefff;
+}
+
+.profileProgress h2 {
+  margin-bottom: 0.65rem;
+}
+
+.profileStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.profileStats article {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.15rem;
+  min-width: 0;
+  min-height: 4.8rem;
+  padding: 0.45rem 0.2rem;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0a294a, #071a32);
+  text-align: center;
+}
+
+.profileStatIcon {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: #0a4b9b;
+  color: #8be6ff;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.profileStats strong {
+  color: #f0f8ff;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.profileStats article > span:last-child {
+  color: #b4cbe0;
+  font-size: 0.62rem;
+  line-height: 1.2;
+}
+
+.profileJourney {
+  margin-top: 0.65rem;
+  padding: 0.65rem 0.75rem 0.4rem;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: rgb(3 18 37 / 42%);
+}
+
+.profileJourney h3 {
+  margin: 0;
+  color: #d9eafb;
+  font-size: 0.8rem;
+}
+
+.profileStages {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.2rem;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profileStages li {
+  display: grid;
+  justify-items: center;
+  gap: 0.14rem;
+  color: #a9c5df;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.profileStageMarker {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 2px solid #3676a7;
+  border-radius: 50%;
+  background: #0b2543;
+  color: #8ab7d9;
+  font-size: 1rem;
+}
+
+.profileStages li[data-published="true"] .profileStageMarker {
+  border-color: #31d99b;
+  background: #127653;
+  color: #e2fff2;
+}
+
+.profileStages small {
+  color: #8faecc;
+  font-size: 0.59rem;
+  font-weight: 600;
+}
+
+.profileJourney > p {
+  margin: 0.55rem 0 0;
+  color: #8faecc;
+  font-size: 0.63rem;
+  text-align: center;
+}
+
+.profileSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.profileSectionHeader h2 {
+  margin-bottom: 0.7rem;
+}
+
+.profileSectionHeader a {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #1785b7;
+  border-radius: 0.3rem;
+  color: #d9f6ff;
+  font-size: 0.68rem;
+  text-decoration: none;
+}
+
+.profileSectionHeader a:hover {
+  background: #0c4770;
+}
+
+.profileTeamSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.15rem 0 0.6rem;
+  padding: 0.65rem;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: rgb(3 18 37 / 38%);
+}
+
+.profileTeamLogo,
+.profileTeamLogoFallback {
+  display: grid;
+  flex: 0 0 4rem;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid #197bc2;
+  border-radius: 0.35rem;
+  background: #08284b;
+  color: #9deaff;
+  font-size: 1.2rem;
+  font-weight: 900;
+  object-fit: cover;
+}
+
+.profileTeamSummary h3 {
+  margin: 0 0 0.2rem;
+  color: #e8f5ff;
+  font-size: 0.98rem;
+}
+
+.profileTeamSummary p {
+  margin: 0;
+  color: #a8c4de;
+  font-size: 0.73rem;
+}
+
+.profileRoster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profileRoster li {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 3.65rem;
+  padding: 0.25rem;
+  border-radius: 0.3rem;
+  color: #d9eafb;
+  text-align: center;
+}
+
+.profileRoster li[aria-current="true"] {
+  background: #0c355a;
+}
+
+.profileMemberAvatar {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 1px solid #2588c5;
+  border-radius: 0.35rem;
+  background: #0c345a;
+  color: #c9f3ff;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.profileRoster strong {
+  max-width: 5rem;
+  font-size: 0.67rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileRoster small {
+  color: #a8c4de;
+  font-size: 0.61rem;
+}
+
+.profileActivity > h2 {
+  margin-bottom: 0.45rem;
+}
+
+.profileActivityList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profileActivityList li {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgb(35 93 141 / 50%);
+}
+
+.profileActivityIcon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.4rem;
+  background: #0a4773;
+  color: #6de8c2;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.profileActivityList li > span:nth-child(2) {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.profileActivityList strong {
+  color: #d9eafb;
+  font-size: 0.72rem;
+}
+
+.profileActivityList small,
+.profileActivityList time {
+  color: #8faecc;
+  font-size: 0.62rem;
+}
+
+.profileEditSection {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px solid var(--intranet-line);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0b2747, #081d38);
+}
+
+.profileEditSection h2 {
+  margin-top: 0;
+  color: #e9f7ff;
+}
+
+.teamSetup,
+.teamDashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.teamHero {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) 8rem;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border: 1px solid #1977b5;
+  border-radius: 0.4rem;
+  background:
+    radial-gradient(ellipse at 75% 50%, rgb(10 125 205 / 25%), transparent 58%),
+    linear-gradient(110deg, #0b2a4d, #071b34);
+}
+
+.teamIdentity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.teamLogo,
+.teamLogoFallback {
+  display: grid;
+  flex: 0 0 5.5rem;
+  place-items: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  border: 2px solid #1785c7;
+  border-radius: 0.45rem;
+  background: #061b34;
+  color: #8be6ff;
+  font-size: 1.5rem;
+  font-weight: 900;
+  object-fit: cover;
+}
+
+.teamIdentity h2 {
+  margin: 0.2rem 0 0.45rem;
+  color: #f0f8ff;
+  font-size: clamp(1.25rem, 2.8vw, 1.85rem);
+}
+
+.teamHeroRank {
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  padding-left: 1rem;
+  border-left: 1px solid #245783;
+  text-align: center;
+}
+
+.teamHeroRank strong {
+  color: #f1f8ff;
+  font-size: 1.5rem;
+}
+
+.teamHeroRank strong:last-child {
+  color: #b7dcf8;
+  font-size: 1rem;
+}
+
+.teamHeroRank span,
+.teamSectionHeader p,
+.teamInactiveNotice {
+  margin: 0;
+  color: #9ab8d5;
+  font-size: 0.72rem;
+}
+
+.teamPanel,
+.teamManagement {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--intranet-line);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0b2747, #081d38);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 0.35rem 1rem rgb(0 0 0 / 18%);
+}
+
+.teamPanel h2,
+.teamManagement h2 {
+  margin: 0 0 0.75rem;
+  color: #e9f7ff;
+  font-size: 1rem;
+}
+
+.teamSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.teamSectionHeader h2 {
+  margin: 0;
+}
+
+.teamSectionHeader :global(.button-link) {
+  flex: 0 0 auto;
+}
+
+.teamMemberGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teamMemberGrid li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.7rem 0.4rem;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: #081d38;
+  text-align: center;
+}
+
+.teamMemberGrid li[aria-current="true"] {
+  border-color: #efc837;
+  background: #0c2d50;
+}
+
+.teamMemberAvatar {
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border: 1px solid #278cc7;
+  border-radius: 0.35rem;
+  background: #0c345a;
+  color: #d3f5ff;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.teamMemberGrid strong {
+  max-width: 100%;
+  color: #e6f4ff;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.teamMemberGrid small {
+  color: #a9c5df;
+  font-size: 0.65rem;
+}
+
+.teamCrown {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.45rem;
+  color: #f4c943;
+}
+
+.teamInactiveNotice {
+  margin-top: 0.65rem;
+}
+
+.teamStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.teamStats article {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+  min-height: 5rem;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: #081d38;
+  text-align: center;
+}
+
+.teamStats strong {
+  color: #eef8ff;
+  font-size: clamp(1rem, 2.1vw, 1.4rem);
+  overflow-wrap: anywhere;
+}
+
+.teamStats span {
+  color: #a9c5df;
+  font-size: 0.67rem;
+}
+
+.teamActivity {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teamActivity li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgb(35 93 141 / 50%);
+}
+
+.teamActivity li > span:nth-child(2) {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.teamActivity strong {
+  color: #d9eafb;
+  font-size: 0.72rem;
+}
+
+.teamActivity small,
+.teamActivity time {
+  color: #8faecc;
+  font-size: 0.64rem;
+}
+
+.teamActivityIcon {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.35rem;
+  background: #0a4773;
+  color: #6de8c2;
+  font-weight: 900;
+}
+
+.teamManagement {
+  margin-top: 0.85rem;
+}
+
+.rankingsDashboard {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.rankingsTabs,
+.worldTabs {
+  display: flex;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: #061a31;
+}
+
+.rankingsTabs a,
+.worldTabs a {
+  flex: 1 0 auto;
+  padding: 0.65rem 0.9rem;
+  color: #b4cbe0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rankingsTabs a[aria-current="page"],
+.worldTabs a[aria-current="page"] {
+  background: #8fd7f5;
+  color: #09213f;
+}
+
+.rankingWorldGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.rankingWorldCard,
+.globalRanking,
+.rankingEmpty,
+.worldOverview,
+.worldStats,
+.worldChallenge,
+.worldEmpty {
+  min-width: 0;
+  border: 1px solid var(--intranet-line);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0b2747, #081d38);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 0.35rem 1rem rgb(0 0 0 / 18%);
+}
+
+.rankingWorldCard {
+  overflow: hidden;
+  padding-bottom: 0.5rem;
+}
+
+.rankingWorldArt {
+  position: relative;
+  height: clamp(5.5rem, 10vw, 8rem);
+  overflow: hidden;
+  background: #071b34;
+}
+
+.rankingWorldArt img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.rankingWorldArt span {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid #65caff;
+  border-radius: 99rem;
+  background: #06376a;
+  color: #dff8ff;
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.rankingWorldCard h2 {
+  min-height: 2.6rem;
+  margin: 0.55rem 0.5rem 0.35rem;
+  color: #e9f7ff;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.rankingWorldCard > p {
+  margin: 0.6rem;
+  color: #9ab8d5;
+  font-size: 0.7rem;
+}
+
+.rankingPodium {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.rankingPodium li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgb(35 93 141 / 50%);
+}
+
+.rankingPodium li[data-current-team="true"],
+.rankingTable tr[data-current-team="true"] {
+  background: rgb(21 108 157 / 24%);
+}
+
+.rankingPodium li > span:last-child {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.rankingPodium strong {
+  color: #d9eafb;
+  font-size: 0.68rem;
+  overflow-wrap: anywhere;
+}
+
+.rankingPodium small {
+  color: #93b3d1;
+  font-size: 0.62rem;
+}
+
+.rankingMedal {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border: 1px solid #efc445;
+  border-radius: 50%;
+  background: #624813;
+  color: #fff3c3;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.rankingMore {
+  margin: 0.55rem;
+  color: #a9c5df;
+  font-size: 0.68rem;
+}
+
+.rankingMore summary {
+  cursor: pointer;
+}
+
+.rankingMore ol {
+  padding-left: 1.3rem;
+}
+
+.globalRanking {
+  padding: 1rem;
+}
+
+.globalRanking > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.globalRanking h2,
+.worldStats h2,
+.worldChallenge h2,
+.worldOverview h2 {
+  margin: 0;
+  color: #e9f7ff;
+}
+
+.globalRanking header p {
+  margin: 0.25rem 0 0;
+  color: #9ab8d5;
+  font-size: 0.75rem;
+}
+
+.globalRanking header > span {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #1977b5;
+  border-radius: 99rem;
+  color: #bdefff;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.rankingTableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.rankingTable {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  color: #d9eafb;
+  font-size: 0.72rem;
+}
+
+.rankingTable th,
+.rankingTable td {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #174477;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rankingTable th:nth-child(2),
+.rankingTable td:nth-child(2) {
+  text-align: left;
+}
+
+.rankingTable thead {
+  background: #0a3157;
+  color: #bdefff;
+}
+
+.worldWorkspace {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.worldSelector {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.worldSelector a {
+  display: grid;
+  grid-template-rows: 4.2rem minmax(0, auto);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: #081d38;
+  color: #d9eafb;
+  text-decoration: none;
+}
+
+.worldSelector a[aria-current="page"] {
+  border-color: #22b7ed;
+  box-shadow: 0 0 0 1px #22b7ed;
+}
+
+.worldSelector img {
+  width: 100%;
+  height: 4.2rem;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.worldSelector a > span {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.worldSelector small {
+  color: #43d5ff;
+  font-size: 0.6rem;
+  font-weight: 900;
+}
+
+.worldSelector strong {
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.worldOverview {
+  display: grid;
+  grid-template-columns: minmax(9rem, 30%) minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+  padding: 0;
+}
+
+.worldOverview > img {
+  width: 100%;
+  height: 100%;
+  min-height: 9rem;
+  max-height: 13rem;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.worldOverview > div {
+  padding-block: 0.8rem;
+}
+
+.worldOverview h2 {
+  margin-top: 0.2rem;
+  font-size: clamp(1.2rem, 2.7vw, 1.8rem);
+}
+
+.worldOverview > div > p:not(.featureLabel) {
+  margin: 0.4rem 0 0.7rem;
+  color: #b4cbe0;
+  font-size: 0.8rem;
+}
+
+.worldCodeNote {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  border-top: 1px solid #174477;
+  background: #071b34;
+  color: #8fb0cf;
+  font-size: 0.68rem;
+}
+
+.worldTabs {
+  flex-wrap: nowrap;
+}
+
+.worldStats,
+.worldChallenge,
+.worldEmpty {
+  padding: 0.9rem 1rem;
+}
+
+.worldStats h2 {
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.worldStats > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.worldStats article {
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.55rem 0.25rem;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: #081d38;
+  text-align: center;
+}
+
+.worldStats strong {
+  color: #eef8ff;
+  font-size: 1.15rem;
+}
+
+.worldStats span {
+  color: #a9c5df;
+  font-size: 0.64rem;
+}
+
+.worldChallenge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.worldChallenge h2 {
+  margin-top: 0.2rem;
+  font-size: 1rem;
+}
+
+.worldChallenge p:not(.featureLabel) {
+  margin: 0.35rem 0 0;
+  color: #b4cbe0;
+  font-size: 0.76rem;
+}
+
+.worldChallenge time {
+  grid-column: 1 / -1;
+  color: #8faecc;
+  font-size: 0.7rem;
+}
+
+.managementDashboard {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.managementGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.managementPanel {
+  grid-column: span 6;
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--intranet-line);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0b2747, #081d38);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 0.35rem 1rem rgb(0 0 0 / 18%);
+}
+
+.managementPanelThird {
+  grid-column: span 4;
+}
+
+.managementPanelWide {
+  grid-column: 1 / -1;
+}
+
+.managementPanel h2,
+.managementPanel h3 {
+  margin: 0;
+  color: #e9f7ff;
+  font-size: 0.9rem;
+}
+
+.managementPanel > p {
+  margin: 0.4rem 0 0;
+  color: #9ab8d5;
+  font-size: 0.72rem;
+}
+
+.managementPanel > strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: #f0f8ff;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  line-height: 1.15;
+}
+
+.managementPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.managementPanelHeader a {
+  color: #52d7ff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.managementFilters,
+.managementTabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.managementFilters {
+  margin-bottom: 0.65rem;
+}
+
+.managementFilters input,
+.managementFilters select {
+  min-width: min(100%, 12rem);
+  min-height: 2.2rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #245783;
+  border-radius: 0.3rem;
+  background: #061a31;
+  color: #edf8ff;
+}
+
+.managementTabs {
+  margin-bottom: 0.65rem;
+  padding: 0.2rem;
+  border: 1px solid #174477;
+  border-radius: 0.35rem;
+  background: #061a31;
+}
+
+.managementTabs a,
+.managementTabs span {
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.25rem;
+  color: #b4cbe0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.managementTabs [aria-current="page"] {
+  background: #0c4773;
+  color: #fff;
+}
+
+.managementTableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #174477;
+  border-radius: 0.3rem;
+}
+
+.managementTable {
+  width: 100%;
+  min-width: 38rem;
+  border-collapse: collapse;
+  color: #d9eafb;
+  font-size: 0.69rem;
+}
+
+.managementTable th,
+.managementTable td {
+  padding: 0.45rem 0.55rem;
+  border-bottom: 1px solid rgb(35 93 141 / 50%);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.managementTable th {
+  background: #0a3157;
+  color: #bdefff;
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+
+.managementTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.managementTable td a {
+  color: #bdefff;
+  font-weight: 800;
+}
+
+.managementPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.14rem 0.45rem;
+  border: 1px solid #2ba876;
+  border-radius: 99rem;
+  background: #104a45;
+  color: #a4f5c5;
+  font-size: 0.63rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.managementPill[data-tone="warning"] {
+  border-color: #b8892b;
+  background: #594211;
+  color: #ffe18d;
+}
+
+.managementPill[data-tone="danger"] {
+  border-color: #b74d56;
+  background: #571d2a;
+  color: #ffc0c5;
+}
+
+.managementPill[data-tone="info"] {
+  border-color: #317fb5;
+  background: #0b3c66;
+  color: #bdefff;
+}
+
+.managementEmpty {
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px dashed #245783;
+  border-radius: 0.3rem;
+  color: #9ab8d5;
+  font-size: 0.74rem;
+}
+
+.managementWorldList {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.managementWorldCard {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.5rem;
+  border: 1px solid #174477;
+  border-radius: 0.3rem;
+  background: #081d38;
+}
+
+.managementWorldCard img {
+  width: 100%;
+  height: 3.2rem;
+  border-radius: 0.2rem;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.managementWorldCard strong {
+  color: #e9f7ff;
+  font-size: 0.67rem;
+  line-height: 1.25;
+}
+
+.managementWorldCard span,
+.managementWorldCard small {
+  color: #9ab8d5;
+  font-size: 0.61rem;
+}
+
+.managementBars {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.managementBars li {
+  display: grid;
+  grid-template-columns: minmax(4rem, 0.7fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 0.45rem;
+  color: #b4cbe0;
+  font-size: 0.66rem;
+}
+
+.managementBarTrack {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 99rem;
+  background: #061a31;
+}
+
+.managementBarTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #137de8, #54d6ff);
+}
+
+.managementActivity {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.managementActivity li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 0.6rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgb(35 93 141 / 50%);
+}
+
+.managementActivity li:last-child {
+  border-bottom: 0;
+}
+
+.managementActivity strong {
+  color: #d9eafb;
+  font-size: 0.68rem;
+}
+
+.managementActivity small,
+.managementActivity time {
+  color: #8faecc;
+  font-size: 0.62rem;
+}
+
+.managementQueue {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.managementQueueItem {
+  padding: 0.7rem;
+  border: 1px solid #174477;
+  border-radius: 0.3rem;
+  background: #081d38;
+}
+
+.managementQueueItem > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #e9f7ff;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.managementQueueItem > p {
+  margin: 0.4rem 0;
+  color: #9ab8d5;
+  font-size: 0.68rem;
+}
+
+.managementPerson {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.managementPersonAvatar {
+  display: grid;
+  flex: 0 0 2rem;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #278cc7;
+  border-radius: 50%;
+  background: #0c345a;
+  color: #d3f5ff;
+  font-size: 0.66rem;
+  font-weight: 900;
+  object-fit: cover;
+}
+
+.managementHero {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 22%);
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 7rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #1977b5;
+  border-radius: 0.35rem;
+  background:
+    radial-gradient(ellipse at 80% 50%, rgb(10 125 205 / 26%), transparent 58%),
+    linear-gradient(110deg, #0b2a4d, #071b34);
+}
+
+.managementHero h2 {
+  margin: 0.15rem 0;
+  color: #f0f8ff;
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+}
+
+.managementHero p:not(.featureLabel) {
+  margin: 0.3rem 0 0;
+  color: #b4cbe0;
+  font-size: 0.72rem;
+}
+
+.managementHero img {
+  width: 100%;
+  max-height: 6rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+:global(main#contenido:has([data-intranet-shell="true"])) {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.shell :global(.management-page) {
+  max-width: none;
+  margin-inline: 0;
+}
+
+.shell :global(.management-section),
+.shell :global(.management-card),
+.shell :global(.card),
+.shell :global(.notice) {
+  border: 1px solid var(--intranet-line);
+  border-radius: 0.35rem;
+  background: linear-gradient(145deg, #0b2747, #081d38);
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 0.35rem 1rem rgb(0 0 0 / 18%);
+  color: var(--intranet-text);
+}
+
+.shell :global(.management-section) {
+  margin-block: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+
+.shell :global(.management-section > summary),
+.shell :global(.management-card summary) {
+  color: #e9f7ff;
+}
+
+.shell :global(.management-card) {
+  padding: 0.9rem;
+  margin-block: 0.75rem;
+}
+
+.shell :global(h2),
+.shell :global(h3),
+.shell :global(h4),
+.shell :global(h5) {
+  color: #e9f7ff;
+}
+
+.shell :global(p),
+.shell :global(li),
+.shell :global(label) {
+  color: #b4cbe0;
+}
+
+.shell :global(a) {
+  color: #52d7ff;
+}
+
+.shell :global(a:hover) {
+  color: #a5eaff;
+}
+
+.shell :global(.management-form) {
+  max-width: 44rem;
+}
+
+.shell :global(.management-form input:not([type="checkbox"])),
+.shell :global(.management-form textarea),
+.shell :global(.management-form select) {
+  border: 1px solid #245783;
+  background: #061a31;
+  color: #edf8ff;
+}
+
+.shell :global(.management-form input::placeholder),
+.shell :global(.management-form textarea::placeholder) {
+  color: #9ab8d5;
+  opacity: 1;
+}
+
+.shell :global(.management-form button),
+.shell :global(.button-link) {
+  border-color: #1187b8;
+  background: #0875ad;
+  box-shadow: 2px 2px 0 #031127;
+  color: #fff;
+}
+
+.shell :global(.management-form button:hover),
+.shell :global(.button-link:hover) {
+  border-color: #20c9f4;
+  background: #0c8cc6;
+}
+
+.shell :global([role="status"]) {
+  color: #a4f5c5;
+}
+
+.shell :global([role="alert"]) {
+  color: #ffb4aa;
+}
+
+@media (max-width: 58rem) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding: 0.55rem 0.65rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--intranet-line);
+  }
+
+  .sideNav {
+    display: flex;
+    align-items: stretch;
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+  }
+
+  .navGroup {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  .navGroup + .navGroup {
+    padding-top: 0;
+    padding-left: 0.4rem;
+    border-top: 0;
+    border-left: 1px solid var(--intranet-line);
+  }
+
+  .navGroupLabel {
+    display: none;
+  }
+
+  .sideNav a {
+    flex: 0 0 auto;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.3rem;
+    white-space: nowrap;
+  }
+
+  .sideNav a[aria-current="page"] {
+    border-color: #1b7eb5;
+  }
+
+  .navMark {
+    display: none;
+  }
+
+  .navIcon {
+    display: none;
+  }
+
+  .workspace {
+    padding-inline: clamp(0.9rem, 3vw, 1.5rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .profileDashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teamDashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teamHero {
+    grid-column: auto;
+  }
+
+  .rankingWorldGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .worldStats > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .managementPanelThird {
+    grid-column: span 6;
+  }
+
+  .managementWorldList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profileHeadingActions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profileQuote {
+    text-align: left;
+  }
+}
+
+@media (max-width: 38rem) {
+  .shell {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .workspace {
+    padding-inline: 0.75rem;
+  }
+
+  .accountText {
+    display: none;
+  }
+
+  .heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .seasonBadge {
+    align-self: start;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .screenGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .managementPanel,
+  .managementPanelThird {
+    grid-column: 1 / -1;
+  }
+
+  .managementWorldList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .managementHero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .managementHero img {
+    max-height: 4.5rem;
+  }
+
+  .featureCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .featureCard img {
+    max-height: 7rem;
+  }
+
+  .profileIdentity {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .teamHero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teamHeroRank {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-items: center;
+    align-items: center;
+    padding: 0.55rem 0 0;
+    border-top: 1px solid #245783;
+    border-left: 0;
+  }
+
+  .teamHeroRank strong {
+    font-size: 1.15rem;
+  }
+
+  .teamHeroRank strong:last-child {
+    font-size: 0.85rem;
+  }
+
+  .teamSectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .teamStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teamActivity li {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+
+  .teamActivity time {
+    grid-column: 2;
+  }
+
+  .rankingWorldGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .worldSelector {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .worldSelector a {
+    flex: 0 0 8.5rem;
+  }
+
+  .worldOverview {
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .worldOverview > img {
+    min-height: 7rem;
+  }
+
+  .worldOverview > div {
+    padding-right: 0.6rem;
+  }
+
+  .worldStats > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .worldChallenge {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .worldChallenge time {
+    grid-column: auto;
+  }
+
+  .profilePortrait {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .profileStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profileActivityList li {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+
+  .profileActivityList time {
+    grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sideNav a {
+    transition: none;
+  }
+}

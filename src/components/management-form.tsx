@@ -17,9 +17,14 @@ export function ManagementForm({ action, values = {}, children, label, onCommit,
     const form = event.currentTarget;
     setPending(true); setMessage(""); setFailed(false);
     const data = new FormData(event.currentTarget);
-    const body: Record<string, string | boolean> = { ...values };
+    const body: Record<string, string | boolean | string[]> = { ...values };
     for (const [key, value] of data) {
-      if (typeof value === "string") body[key] = ["accepted", "adult", "staff"].includes(key) ? value === "on" : value;
+      if (typeof value === "string") {
+        const normalized = ["accepted", "adult", "staff"].includes(key) ? value === "on" : value;
+        const existing = body[key];
+        body[key] = existing === undefined ? normalized
+          : [...(Array.isArray(existing) ? existing : [String(existing)]), String(normalized)];
+      }
     }
     for (const input of event.currentTarget.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name]')) {
       body[input.name] = input.checked;

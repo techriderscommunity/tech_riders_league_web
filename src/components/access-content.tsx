@@ -2,12 +2,14 @@ import Link from "next/link";
 import { ManagementForm } from "./management-form";
 import { TERMS_VERSION } from "../lib/management/validation";
 import { AccessDialog } from "./access-dialog";
+import { registrationCommunities } from "../lib/management/service";
 
-export function AccessContent({ params = {} }: {
+export async function AccessContent({ params = {} }: {
   params?: { token?: string; purpose?: string; invitacion?: string };
 }) {
   const enabled = process.env.REGISTRATION_ENABLED === "true";
   const activation = Boolean(params.token && ["verify", "reset"].includes(params.purpose ?? ""));
+  const communities = enabled ? await registrationCommunities() : [];
   return <>
     {activation ? (
       <section>
@@ -36,7 +38,10 @@ export function AccessContent({ params = {} }: {
         <label>Correo de Luma<input name="email" type="email" autoComplete="email" required /></label>
         <label>Contraseña (mínimo 12 caracteres)<input name="password" type="password" minLength={12} maxLength={128} autoComplete="new-password" required /></label>
         <label className="management-check"><input name="staff" type="checkbox" />Soy staff de una comunidad</label>
-        <label>Comunidad (solo si solicitas staff)<input name="community" maxLength={120} /></label>
+        <label>Comunidad (solo si solicitas staff)<select name="community" defaultValue="">
+          <option value="">Selecciona una comunidad</option>
+          {communities.map(community => <option key={community.id} value={community.id}>{community.name}</option>)}
+        </select></label>
         <label className="management-check"><input name="adult" type="checkbox" required />Confirmo que tengo al menos 18 años.</label>
         <label className="management-check"><input name="accepted" type="checkbox" required />
           <span>Acepto las condiciones de participación, el tratamiento de datos para gestionar la League y la autorización de uso de mi imagen y voz para su difusión por Tech Riders y las comunidades organizadoras. <Link href="/privacidad" target="_blank">Leer condiciones y privacidad</Link> ({TERMS_VERSION}).</span>

@@ -35,9 +35,17 @@
 - Cambio de capitan aprobado por staff, baja logica del rol anterior y activacion
   obligatoria mediante correo de contrasena, incluso si ya fue capitan.
 - Relevo excepcional por fuerza mayor, con motivo, historial y continuidad real.
-- Retos versionados, plazo opcional en borrador y obligatorio al publicar,
-  apertura/cierre, misiones GitHub privadas fijadas a SHA y foto mediante enlaces
-  HTTPS; revision explicita y conservacion de versiones anteriores.
+- Retos redactados, revisados y publicados en el repositorio público
+  [techriderscommunity/tech_riders_league](https://github.com/techriderscommunity/tech_riders_league);
+  la intranet enlaza al repositorio y no incluye un editor de retos.
+  Las rúbricas siguen versionadas por mundo; sus criterios publicados quedan
+  inmutables. Misiones GitHub privadas fijadas a SHA y foto mediante enlaces HTTPS;
+  revisión explícita y conservación de versiones anteriores.
+- Rubricas versionadas por mundo; sus criterios publicados quedan inmutables.
+  Las evaluaciones guardan criterios, feedback privado/público, el SHA y la
+  version exacta de rubrica. Finalizar bloquea la evaluacion y recalcula puntos
+  desde el ledger con reversos enlazados; cerrar el mundo exige evaluar todas
+  las entregas aprobadas.
   Ver [GitHub: entregas y Hall of Fame](GITHUB-ENTREGAS.md) para Apps, permisos,
   snapshots cifrados y publicacion autorizada del Top 3 mediante PR borrador.
 - Puntos separados de asistencia/foto/reto/bonus, recalculo sin duplicados.
@@ -53,12 +61,23 @@
 - Vinculaciones de staff a comunidades, baja personal independiente y baja
   oficial. Solo el responsable puede revocar una comunidad, porque implica
   dar de baja a otros staff; otras vinculaciones activas conservan permisos.
+- Cada comunidad tiene rol Staff o Admin League. Tech Riders queda como Admin
+  League; el permiso se hereda por sus miembros Staff aprobados y se retira al
+  cambiar el rol o desactivar su membresia. Solo el responsable puede cambiar
+  roles comunitarios; las concesiones directas existentes siguen separadas.
+- El acceso de Staff se limita a los mundos asignados a su comunidad. Un mismo
+  mundo puede estar asignado a varias comunidades cuando es compartido, como el
+  Hackathon. Admin League tiene acceso a todos los mundos.
+- Las reglas de temporada y sus parámetros se mantienen en el código y las
+  migraciones; no hay un panel para cambiarlas en ejecución.
 - Solicitudes de baja de cuenta, resolucion y anonimizacion; un capitan aprobado
   necesita relevo antes. Dar de baja una cuenta no da de baja su comunidad.
 - Seguimiento de aportaciones/destinos y recursos autorizados en /memoria.
 - Corte de retencion configurable al inicio de la siguiente temporada, con
   limite 15 de enero de 2028. Retirada de datos personales de participacion,
-  alias historicos de equipos y conservacion de cuentas de staff activo.
+  alias historicos de equipos y conservacion de cuentas de staff activo. El ledger
+  y puntuaciones finales se conservan; al retirar las entregas se desvinculan sus
+  referencias y se borran feedback/comentarios privados.
 
 Hay un entorno de pruebas en Azure, sin registro real habilitado.
 Ver [Azure: entorno privado de pruebas](AZURE-PRUEBAS.md). Luma sigue siendo manual;

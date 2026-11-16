@@ -149,10 +149,23 @@ export async function githubScenarios(context: {
     await linkRepository();
     await assert.rejects(github.githubDashboard(stranger, teamId));
     assert.equal((await github.commitPreview(captain, { teamId })).sha, sha2);
+    const rubric = await ops.saveRubric(root, { eventId: "seguridad", maxScore: 10, criteria: [
+      { name: "Security", description: "Secure implementation", maxPoints: 6 },
+      { name: "Evidence", description: "Reproducible evidence", maxPoints: 4 },
+    ] });
+    await ops.publishRubric(root, { id: rubric.id });
     await ops.saveChallenge(root, { eventId: "seguridad", title: "Private mission", instructions: "Deliver private code", status: "draft" });
     await assert.rejects(ops.saveChallenge(root, { eventId: "seguridad", title: "No deadline", instructions: "Invalid", status: "published", version: 1 }));
-    await ops.saveChallenge(root, { eventId: "seguridad", title: "Private mission", instructions: "Deliver private code", status: "published", version: 1, deadline: "2027-04-01T20:00:00Z", allowResubmission: true });
+    await assert.rejects(ops.saveChallenge(root, { eventId: "seguridad", title: "Bad timezone", instructions: "Invalid", status: "published",
+      version: 1, deadline: "2027-04-01T20:00:00Z", timezone: "Invalid/Zone", maxScore: 10 }), /zona horaria/);
+    await ops.saveChallenge(root, { eventId: "seguridad", title: "Private mission", instructions: "Deliver private code", status: "published", version: 1,
+      opensAt: "2027-04-01T19:00:00Z", deadline: "2027-04-01T20:00:00Z",
+      timezone: "Europe/Madrid", maxScore: 10, allowResubmission: true });
+    assert.equal((await database().query("SELECT version FROM challenge_revisions WHERE event_id='seguridad'")).rowCount, 2);
+    await assert.rejects(database().query("UPDATE challenge_revisions SET title='Tampered' WHERE event_id='seguridad' AND version=2"));
     const deliver = (sha: string, previousId?: string) => github.deliverMission(captain, { teamId, eventId: "seguridad", sha, branch: "main", previousId });
+    await assert.rejects(deliver(sha1));
+    await database().query("UPDATE challenges SET opens_at=clock_timestamp()-interval '1 second' WHERE event_id='seguridad'");
     await assert.rejects(github.deliverMission(members[1], { teamId, eventId: "seguridad", sha: sha1, branch: "main" }));
     await assert.rejects(ops.submitEvidence(captain, { teamId, eventId: "seguridad", kind: "challenge", url: "https://github.com/public/fork" }));
     branchValid = false; await assert.rejects(deliver(sha1)); branchValid = true;
@@ -186,10 +199,43 @@ export async function githubScenarios(context: {
     await assert.rejects(github.closeEvaluation(root, { eventId: "seguridad", reason: "Still pending" }));
     for (const member of members.slice(0, 3)) await ops.markAttendance(root, { teamId, eventId: "seguridad", userId: member.id, luma: true, present: true, atEnd: true, reason: "Fixture checked" });
     await ops.reviewEvidence(root, { id: submitted.id, status: "approved", reason: "Exact SHA verified" });
+    const criteria = await database().query<{ id: string }>("SELECT id FROM evaluation_criteria WHERE rubric_id=$1 ORDER BY position", [rubric.id]);
+    await assert.rejects(ops.saveEvaluation(root, { submissionId: submitted.id, scores: [
+      { criterionId: criteria.rows[0].id, score: 7 },
+      { criterionId: criteria.rows[1].id, score: 3 },
+    ] }), /supera el máximo/);
+    const evaluation = await ops.saveEvaluation(root, { submissionId: submitted.id, scores: [
+      { criterionId: criteria.rows[0].id, score: 5, comment: "Good controls" },
+      { criterionId: criteria.rows[1].id, score: 3, comment: "Repeatable" },
+    ], feedbackPrivate: "Private reviewer note", feedbackPublic: "Validated." });
+    await ops.finalizeEvaluation(root, { id: evaluation.id });
+    assert.equal((await database().query("SELECT id FROM point_ledger WHERE evaluation_id=$1 AND points=8", [evaluation.id])).rowCount, 1);
+    await assert.rejects(database().query("UPDATE submission_evaluations SET final_score=9 WHERE id=$1", [evaluation.id]));
+    await database().query("UPDATE challenges SET deadline=clock_timestamp()-interval '1 second' WHERE event_id='seguridad'");
+    const challenge = (await database().query<{ version: number; title: string; instructions: string; allow_resubmission: boolean }>(
+      "SELECT version,title,instructions,allow_resubmission FROM challenges WHERE event_id='seguridad'")).rows[0];
+    await ops.saveChallenge(root, { eventId: "seguridad", title: challenge.title, instructions: challenge.instructions, status: "closed",
+      version: challenge.version, deadline: new Date(Date.now() - 1000).toISOString(), allowResubmission: challenge.allow_resubmission });
+    await ops.setEventState(root, { eventId: "seguridad", closed: true, reason: "Close fixture world" });
     let preview = (await ops.operationsDashboard(root)).previews.find(p => p.event.id === "seguridad")!.preview;
     await assert.rejects(ops.publishResults(root, { scope: "seguridad", fingerprint: preview.fingerprint }));
     await github.closeEvaluation(root, { eventId: "seguridad", reason: "All definitive SHAs evaluated" });
     await assert.rejects(ops.reviewEvidence(root, { id: submitted.id, status: "rejected", reason: "Evaluation closed" }));
+    await ops.setEventState(root, { eventId: "seguridad", closed: false, reason: "Reopen for a documented evaluation correction" });
+    const correction = await ops.saveEvaluation(root, { submissionId: submitted.id, reason: "Correct criterion scores after reviewer check",
+      scores: [
+        { criterionId: criteria.rows[0].id, score: 4, comment: "Corrected control score" },
+        { criterionId: criteria.rows[1].id, score: 2, comment: "Corrected evidence score" },
+      ], feedbackPrivate: "Corrected private note", feedbackPublic: "Validated." });
+    await ops.finalizeEvaluation(root, { id: correction.id });
+    const firstMovement = (await database().query<{ id: string }>(
+      "SELECT id FROM point_ledger WHERE evaluation_id=$1 AND points=8", [evaluation.id])).rows[0];
+    assert.ok(firstMovement);
+    assert.equal((await database().query("SELECT id FROM point_ledger WHERE reversal_of_entry_id=$1 AND points=-8", [firstMovement.id])).rowCount, 1);
+    assert.equal((await database().query("SELECT id FROM point_ledger WHERE evaluation_id=$1 AND points=6", [correction.id])).rowCount, 1);
+    await ops.setEventState(root, { eventId: "seguridad", closed: true, reason: "Close after correction" });
+    await github.closeEvaluation(root, { eventId: "seguridad", reason: "Close corrected evaluation" });
+    preview = (await ops.operationsDashboard(root)).previews.find(p => p.event.id === "seguridad")!.preview;
     await ops.publishResults(root, { scope: "seguridad", fingerprint: preview.fingerprint });
     await assert.rejects(github.prepareSolution(members[1], { submissionId: submitted.id, folder: "world-security", reason: "Not staff" }));
     await assert.rejects(github.prepareSolution(root, { submissionId: oldId, folder: "world-security", reason: "Old SHA" }));

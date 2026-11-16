@@ -4,7 +4,7 @@ import { database, transaction } from "./db.ts";
 import { digest, token } from "./crypto.ts";
 import { appUrl } from "./mail.ts";
 import { requireStaff, type User } from "./service.ts";
-import { team, event, run, invalidate, allowedAtFinal, type RankedTeam } from "./operations.ts";
+import { team, event, run, invalidate, allowedAtFinal, requireWorldScope, type RankedTeam } from "./operations.ts";
 import { text, uuid, ManagementError } from "./validation.ts";
 import * as api from "./github-api.ts";
 
@@ -91,8 +91,10 @@ export async function commitPreview(user: User, input: Input) {
 async function deliveryContext(client: PoolClient, actor: User, input: Input) {
   const t = await team(client, input.teamId, actor), e = await event(client, input.eventId);
   await allowedAtFinal(client, e, t.id);
-  const challenge = await client.query<{ version: number; allow_resubmission: boolean; open: boolean }>(
-    `SELECT version,allow_resubmission,status='published' AND deadline IS NOT NULL AND deadline>clock_timestamp() AS open
+  const challenge = await client.query<{ version: number; allow_resubmission: boolean; rubric_id: string | null; open: boolean }>(
+    `SELECT version,allow_resubmission,rubric_id,status='published' AND rubric_id IS NOT NULL
+       AND (opens_at IS NULL OR opens_at<=clock_timestamp())
+       AND deadline IS NOT NULL AND deadline>clock_timestamp() AS open
      FROM challenges WHERE event_id=$1 FOR UPDATE`, [e.id]);
   const c = challenge.rows[0];
   if (!c?.open || e.evaluation_closed) throw new ManagementError("La misión no tiene plazo abierto o ya terminó la evaluación.");
@@ -111,12 +113,19 @@ export async function deliverMission(user: User, input: Input) {
         latest.c.version !== context.c.version) throw new ManagementError("La misión o el repositorio cambiaron durante la entrega; vuelve a revisar.", 409);
     const id = randomUUID(), snapshotDigest = api.sha256(captured.zip);
     await client.query("UPDATE submissions SET current=false WHERE team_id=$1 AND event_id=$2 AND kind='challenge' AND current", [latest.t.id, latest.e.id]);
-    await client.query(`INSERT INTO submissions(id,team_id,event_id,kind,url,challenge_version,github_repository_id,github_full_name,
+    await client.query(`INSERT INTO submissions(id,team_id,event_id,kind,url,challenge_version,rubric_id,github_repository_id,github_full_name,
       github_installation_id,commit_sha,branch,submitted_by,snapshot,snapshot_digest,snapshot_manifest)
-      VALUES($1,$2,$3,'challenge',$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+      VALUES($1,$2,$3,'challenge',$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [id, latest.t.id, latest.e.id, `https://github.com/${captured.repository.full_name}/tree/${sha}`, latest.c.version,
-        captured.repository.id, captured.repository.full_name, latest.b.installation_id, sha, branch, actor.id,
+        latest.c.rubric_id, captured.repository.id, captured.repository.full_name, latest.b.installation_id, sha, branch, actor.id,
         api.encryptSnapshot(captured.zip, id), snapshotDigest, JSON.stringify(captured.files)]);
+    const lockedRubric = await client.query("UPDATE evaluation_rubrics SET status='locked' WHERE id=$1 AND status='published' RETURNING id", [latest.c.rubric_id]);
+    if (!lockedRubric.rowCount) {
+      const state = await client.query<{ status: string }>("SELECT status FROM evaluation_rubrics WHERE id=$1", [latest.c.rubric_id]);
+      if (!["locked", "archived"].includes(state.rows[0]?.status ?? "")) {
+        throw new ManagementError("La versión de rúbrica cambió durante la entrega; vuelve a intentarlo.", 409);
+      }
+    }
     await invalidate(client, latest.e.id);
     await audit(client, actor, "mission.delivered", id, { sha, repositoryId: captured.repository.id, eventId: latest.e.id, snapshotDigest });
   });
@@ -126,10 +135,19 @@ async function readSubmission(client: PoolClient, actor: User, id: string, staff
   const found = await client.query<GitSubmission>("SELECT * FROM submissions WHERE id=$1 AND commit_sha IS NOT NULL", [uuid(id)]);
   const s = found.rows[0];
   if (!s) throw new ManagementError("Entrega GitHub no disponible.", 404);
-  if (actor.staff_status !== "approved") {
-    const access = await client.query("SELECT 1 FROM members WHERE team_id=$1 AND user_id=$2 AND active", [s.team_id, actor.id]);
-    if (!access.rowCount) throw new ManagementError("No puedes consultar esta entrega privada.", 403);
+  if (staffOnly) {
+    await requireWorldScope(client, actor, s.event_id);
+    return s;
   }
+  if (actor.is_owner || actor.is_league_admin) return s;
+  if (actor.staff_status === "approved") {
+    const membership = await client.query("SELECT 1 FROM members WHERE team_id=$1 AND user_id=$2 AND active", [s.team_id, actor.id]);
+    if (membership.rowCount) return s;
+    await requireWorldScope(client, actor, s.event_id);
+    return s;
+  }
+  const access = await client.query("SELECT 1 FROM members WHERE team_id=$1 AND user_id=$2 AND active", [s.team_id, actor.id]);
+  if (!access.rowCount) throw new ManagementError("No puedes consultar esta entrega privada.", 403);
   return s;
 }
 function plainSnapshot(s: GitSubmission) {
@@ -147,10 +165,19 @@ export async function downloadSubmission(user: User, id: string) {
 export async function closeEvaluation(user: User, input: Input) {
   return run(user, true, async (client, actor) => {
     const e = await event(client, input.eventId, false), reason = text(input.reason, "Motivo", 1000);
-    const c = await client.query<{ ended: boolean }>("SELECT deadline IS NOT NULL AND deadline<=clock_timestamp() AS ended FROM challenges WHERE event_id=$1", [e.id]);
-    if (!c.rows[0]?.ended) throw new ManagementError("La evaluación solo puede cerrarse después del deadline.");
+    if (!e.closed) throw new ManagementError("Cierra el mundo antes de cerrar su evaluación.");
+    const c = await client.query<{ ended: boolean; status: string }>(
+      "SELECT deadline IS NOT NULL AND deadline<=clock_timestamp() AS ended,status FROM challenges WHERE event_id=$1", [e.id]);
+    if (!c.rows[0]?.ended || c.rows[0].status !== "closed") throw new ManagementError("Cierra el reto después de su deadline antes de finalizar la evaluación.");
     const pending = await client.query("SELECT 1 FROM submissions WHERE event_id=$1 AND current AND kind='challenge' AND status IN ('pending','correction')", [e.id]);
     if (pending.rowCount) throw new ManagementError("Quedan entregas pendientes de evaluación o corrección.");
+    const unevaluated = await client.query(
+      `SELECT 1 FROM submissions s WHERE s.event_id=$1 AND s.current AND s.kind='challenge' AND s.status='approved'
+       AND s.rubric_id IS NOT NULL AND NOT EXISTS (
+         SELECT 1 FROM submission_evaluations ev WHERE ev.submission_id=s.id AND ev.rubric_id=s.rubric_id
+           AND ev.commit_sha=s.commit_sha AND ev.status='final'
+       ) LIMIT 1`, [e.id]);
+    if (unevaluated.rowCount) throw new ManagementError("Finaliza cada evaluación aprobada con su SHA y versión de rúbrica antes de cerrar.");
     await client.query("UPDATE league_events SET evaluation_closed=true WHERE id=$1", [e.id]);
     await audit(client, actor, "evaluation.closed", randomUUID(), { eventId: e.id, reason });
   });
@@ -230,11 +257,30 @@ export async function githubDashboard(user: User, teamId?: string) {
   return run(user, !teamId, async (client, actor) => {
     if (teamId) {
       const access = await client.query("SELECT 1 FROM members WHERE team_id=$1 AND user_id=$2 AND active UNION ALL SELECT 1 FROM substitutions WHERE team_id=$1 AND user_id=$2", [uuid(teamId), actor.id]);
-      if (!access.rowCount && actor.staff_status !== "approved") throw new ManagementError("Equipo no autorizado.", 403);
+      if (!access.rowCount) throw new ManagementError("Equipo no autorizado.", 403);
     }
-    const accounts = await client.query<{ user_id: string; login: string }>("SELECT user_id,login FROM github_accounts WHERE $1::uuid IS NULL OR user_id IN (SELECT captain_id FROM teams WHERE id=$1)", [teamId ?? null]);
-    const repositories = await client.query<RepositoryBinding>("SELECT * FROM github_repositories WHERE $1::uuid IS NULL OR team_id=$1", [teamId ?? null]);
-    const jobs = await client.query<SolutionJob>("SELECT * FROM solution_publications WHERE $1::uuid IS NULL OR submission_id IN (SELECT id FROM submissions WHERE team_id=$1)", [teamId ?? null]);
+    const isAdmin = Boolean(actor.is_owner || actor.is_league_admin);
+    const scope = !teamId && !isAdmin ? await client.query<{ world_id: string }>(
+      "SELECT world_id FROM staff_world_assignments WHERE user_id=$1 AND active", [actor.id]) : { rows: [] };
+    const worldIds = !teamId && !isAdmin ? scope.rows.map(row => row.world_id) : null;
+    const scopedTeams = `SELECT DISTINCT team_id FROM submissions WHERE event_id=ANY($3::text[])`;
+    const accounts = await client.query<{ user_id: string; login: string }>(
+      `SELECT user_id,login FROM github_accounts WHERE
+       ($1::uuid IS NOT NULL AND user_id IN (SELECT captain_id FROM teams WHERE id=$1))
+       OR ($1::uuid IS NULL AND $2 AND true)
+       OR ($1::uuid IS NULL AND NOT $2 AND user_id IN (SELECT captain_id FROM teams WHERE id IN (${scopedTeams})))`,
+      [teamId ?? null, isAdmin, worldIds ?? []]);
+    const repositories = await client.query<RepositoryBinding>(
+      `SELECT * FROM github_repositories WHERE
+       ($1::uuid IS NOT NULL AND team_id=$1) OR ($1::uuid IS NULL AND $2)
+       OR ($1::uuid IS NULL AND NOT $2 AND team_id IN (${scopedTeams}))`,
+      [teamId ?? null, isAdmin, worldIds ?? []]);
+    const jobs = await client.query<SolutionJob>(
+      `SELECT * FROM solution_publications WHERE
+       ($1::uuid IS NOT NULL AND submission_id IN (SELECT id FROM submissions WHERE team_id=$1))
+       OR ($1::uuid IS NULL AND $2)
+       OR ($1::uuid IS NULL AND NOT $2 AND event_id=ANY($3::text[]))`,
+      [teamId ?? null, isAdmin, worldIds ?? []]);
     return { enabled: api.githubEnabled(), accounts: accounts.rows, repositories: repositories.rows, jobs: jobs.rows };
   });
 }

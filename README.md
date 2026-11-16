@@ -91,8 +91,9 @@ SMTP/GitHub y la configuración de datos permanecen en App Service, nunca en
 el repositorio ni en el artefacto.
 
 El código de esta web vive en `techriderscommunity/tech_riders_league_web`.
-El repositorio `techriderscommunity/tech_riders_league` se reserva para los
-proyectos publicados de los equipos; no es el origen del despliegue web.
+El repositorio público `techriderscommunity/tech_riders_league` se reserva para
+los retos de la League y los proyectos publicados de los equipos; no es el
+origen del despliegue web.
 
 La base PostgreSQL es privada. Las migraciones se ejecutan desde App Service
 dentro de su VNet, no desde el runner público de GitHub. El CI no recrea la

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { email, teamName, password, ManagementError } from "../src/lib/management/validation.ts";
 import { hashPassword, verifyPassword, token, digest } from "../src/lib/management/crypto.ts";
-import { requireStaff, type User } from "../src/lib/management/service.ts";
+import { requireLeagueAdmin, requireStaff, type User } from "../src/lib/management/service.ts";
 
 test("management validates identity, team names and credentials", () => {
   assert.equal(email(" TEST@example.COM "), "test@example.com");
@@ -21,9 +21,11 @@ test("credentials are salted and tokens stored as digests", async () => {
   assert.equal(value.length, 64);
   assert.notEqual(value, digest(value));
 });
-test("pending and removed staff never get administrative permissions", () => {
+test("staff capabilities are independent from League participation and Admin League is separate", () => {
   const user: User = { id: "test", email: "test@example.test", first_name: "Test", last_name: "Test", verified_at: new Date(), staff_status: "pending", is_owner: false };
   assert.throws(() => requireStaff(user), ManagementError);
   assert.throws(() => requireStaff({ ...user, staff_status: "removed" }), ManagementError);
   assert.doesNotThrow(() => requireStaff({ ...user, staff_status: "approved" }));
+  assert.throws(() => requireLeagueAdmin({ ...user, staff_status: "approved" }), ManagementError);
+  assert.doesNotThrow(() => requireLeagueAdmin({ ...user, is_league_admin: true }));
 });

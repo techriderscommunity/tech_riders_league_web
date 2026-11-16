@@ -53,14 +53,14 @@ export async function operationsScenarios(context: {
   await assert.rejects(ops.markAttendance(staff, { teamId, eventId: "negocio", userId: captain.id, luma: false, present: true, atEnd: false, reason: "Invalid Luma" }));
   await assert.rejects(mark(originals[3]));
   await mark(originals[0]); await mark(originals[1]); await mark(substitute.id);
-  assert.deepEqual(await transaction(c => ops.eligibility(c, teamId)), { worlds: 0, eligible: false });
+  assert.deepEqual(await transaction(c => ops.eligibility(c, teamId)), { worlds: 0, eligible: false, minimumOriginals: 3, minimumWorlds: 3 });
   await mark(originals[2]);
-  assert.deepEqual(await transaction(c => ops.eligibility(c, teamId)), { worlds: 1, eligible: false });
+  assert.deepEqual(await transaction(c => ops.eligibility(c, teamId)), { worlds: 1, eligible: false, minimumOriginals: 3, minimumWorlds: 3 });
   await assert.rejects(ops.cancelSubstitute(captain, { teamId, eventId: "negocio", reason: "Already present" }));
   for (const [world, absent] of [["datos", 0], ["cloud", 1]] as const) {
     for (let i = 0; i < 4; i++) if (i !== absent) await mark(originals[i], world);
   }
-  assert.deepEqual(await transaction(c => ops.eligibility(c, teamId)), { worlds: 3, eligible: true });
+  assert.deepEqual(await transaction(c => ops.eligibility(c, teamId)), { worlds: 3, eligible: true, minimumOriginals: 3, minimumWorlds: 3 });
   await mark(originals[0], "hackathon");
   await assert.rejects(mark(otherCaptain.id, "hackathon", otherId));
   for (const person of otherPeople.slice(0, 3)) await mark(person.id, "negocio", otherId);
@@ -72,6 +72,16 @@ export async function operationsScenarios(context: {
   await mark(originals[2]);
   dashboard = await ops.operationsDashboard(staff);
   assert.equal(preview("negocio").rows.find(t => t.id === teamId)?.puntos, 50, "Repeated checks cannot duplicate points");
+  const ledgerCount = Number((await database().query<{ count: string }>(
+    "SELECT count(*) FROM point_ledger WHERE event_id='negocio'")).rows[0].count);
+  await mark(originals[2]);
+  assert.equal(Number((await database().query<{ count: string }>(
+    "SELECT count(*) FROM point_ledger WHERE event_id='negocio'")).rows[0].count), ledgerCount, "Unchanged score projections do not duplicate ledger movements");
+  const ledgerEntry = (await database().query<{ id: string }>(
+    "SELECT id FROM point_ledger WHERE event_id='negocio' LIMIT 1")).rows[0];
+  assert.ok(ledgerEntry);
+  await assert.rejects(database().query("UPDATE point_ledger SET reason='tampered' WHERE id=$1", [ledgerEntry.id]));
+  await assert.rejects(database().query("DELETE FROM point_ledger WHERE id=$1", [ledgerEntry.id]));
 
   await assert.rejects(ops.requestCaptain(captain, { teamId, nextId: substitute.id, reason: "Not original" }));
   const nextId = originals.find(id => id !== captain.id)!;
@@ -80,7 +90,7 @@ export async function operationsScenarios(context: {
   const change = dashboard.changes.find(c => c.team_id === teamId && c.status === "pending")!;
   await assert.rejects(ops.reviewCaptain(captain, { id: change.id, status: "approved", reason: "No staff" }));
   await ops.reviewCaptain(staff, { id: change.id, status: "approved", reason: "Approved original" });
-  assert.equal((await service.dashboard(captain)).team.is_captain, false);
+  assert.equal((await service.dashboard(captain)).team.is_captain, true, "The current captain remains active until the replacement activates");
   const next = (await database().query<service.User>("SELECT * FROM users WHERE id=$1", [nextId])).rows[0];
   await assert.rejects(ops.submitEvidence(next, { teamId, eventId: "negocio", kind: "photo", url: "https://example.test/photo" }));
   await service.redeem({ token: await findToken(next.email, "token"), purpose: "reset", password: "captain-activation-123" });
@@ -91,9 +101,22 @@ export async function operationsScenarios(context: {
   await ops.reviewCaptain(staff, { id: dashboard.changes.find(c => c.status === "pending")!.id, status: "approved", reason: "Return to original" });
   await service.redeem({ token: await findToken(captain.email, "token"), purpose: "reset", password: "new-test-password-123" });
 
+  const invalidRubric = await ops.saveRubric(staff, { eventId: "negocio", maxScore: 11, criteria: [
+    { name: "Implementation", description: "Working solution", maxPoints: 7 },
+    { name: "Verification", description: "Reproducible checks", maxPoints: 3 },
+  ] });
+  await assert.rejects(ops.publishRubric(staff, { id: invalidRubric.id }), /suma de los máximos/);
+  const rubric = await ops.saveRubric(staff, { eventId: "negocio", maxScore: 10, criteria: [
+    { name: "Implementation", description: "Working solution", maxPoints: 7 },
+    { name: "Verification", description: "Reproducible checks", maxPoints: 3 },
+  ] });
+  await ops.publishRubric(staff, { id: rubric.id });
+  const rubricCriteria = await database().query<{ id: string }>("SELECT id FROM evaluation_criteria WHERE rubric_id=$1 ORDER BY position", [rubric.id]);
+  await assert.rejects(database().query("UPDATE evaluation_criteria SET max_points=8 WHERE id=$1", [rubricCriteria.rows[0].id]));
   await ops.saveChallenge(staff, { eventId: "negocio", title: "Fixture challenge", instructions: "Build reproducible solution", status: "draft" });
   await assert.rejects(ops.submitEvidence(captain, { teamId, eventId: "negocio", kind: "challenge", url: "https://example.test/solution" }));
-  await ops.saveChallenge(staff, { eventId: "negocio", title: "Fixture challenge", instructions: "Build reproducible solution", status: "published", version: 1, deadline: "2027-01-15T18:00:00+01:00" });
+  await ops.saveChallenge(staff, { eventId: "negocio", title: "Fixture challenge", instructions: "Build reproducible solution", status: "published", version: 1,
+    deadline: "2027-01-15T18:00:00+01:00", timezone: "Europe/Madrid", maxScore: 10 });
   await assert.rejects(ops.saveChallenge(staff, { eventId: "negocio", title: "Stale", instructions: "Stale", status: "published", version: 1 }));
   await assert.rejects(ops.submitEvidence(captain, { teamId, eventId: "negocio", kind: "photo", url: "javascript:alert(1)" }));
   await ops.submitEvidence(captain, { teamId, eventId: "negocio", kind: "photo", url: "https://example.test/photo" });
@@ -180,19 +203,19 @@ export async function operationsScenarios(context: {
   assert.equal(replacementView.originals.find(p => p.id === replacement.id)?.original, false);
 
   const secondStaff = await verified("operations-staff@example.test", true);
-  await service.review(root, { kind: "staff", id: secondStaff.id, status: "approved" });
+  const secondRequest = (await database().query<{ id: string }>("SELECT id FROM staff_requests WHERE user_id=$1", [secondStaff.id])).rows[0].id;
+  await service.review(root, { kind: "staff", id: secondRequest, status: "approved", worldIds: ["negocio"] });
   await ops.communityState(root, { name: "Second fixture community", active: true, reason: "Official addition" });
   await ops.addStaffCommunity(root, { userId: secondStaff.id, name: "Second fixture community" });
   await assert.rejects(ops.communityState(staff, { name: "Fixture community", active: false, reason: "Not owner" }));
   await ops.communityState(root, { name: "Fixture community", active: false, reason: "Official withdrawal" });
-  await assert.rejects(ops.saveChallenge(staff, { eventId: "cloud", title: "Removed", instructions: "Removed", status: "draft" }));
   assert.equal((await database().query("SELECT staff_status FROM users WHERE id=$1", [secondStaff.id])).rows[0].staff_status, "approved", "Other valid community preserves staff role");
-  await assert.rejects(service.createTeam(secondStaff, { name: "Dual role fixture" }), /no pueden participar/);
+  await service.createTeam(secondStaff, { name: "Dual role fixture" });
+  assert.ok((await service.dashboard(secondStaff)).team, "Approved Staff can participate independently");
   await ops.leaveStaff(secondStaff, { reason: "Personal withdrawal" });
   assert.equal((await database().query("SELECT active FROM staff_communities WHERE name='Second fixture community'")).rows[0].active, true);
   await assert.rejects(ops.operationsDashboard(secondStaff));
-  await service.createTeam(secondStaff, { name: "Former staff fixture" });
-  assert.ok((await service.dashboard(secondStaff)).team, "Former staff can participate after leaving staff");
+  assert.equal((await service.dashboard(secondStaff)).team?.status, "draft", "Former Staff retains its League participation");
 
   await ops.saveContribution(root, { name: "Fixture sponsor", description: "Resources", destination: "Breakfast", amountCents: 0, url: "https://example.test/resource", authorized: false });
   assert.equal((await database().query("SELECT id FROM contributions WHERE authorized")).rowCount, 0);
@@ -219,6 +242,8 @@ export async function operationsScenarios(context: {
 
 export async function retentionScenario(root: service.User) {
   const before = await ops.publishedResults();
+  const ledgerCount = Number((await database().query<{ count: string }>("SELECT count(*) FROM point_ledger")).rows[0].count);
+  const evaluationCount = Number((await database().query<{ count: string }>("SELECT count(*) FROM submission_evaluations")).rows[0].count);
   await database().query("UPDATE seasons SET retention_at=now()-interval '1 second' WHERE id='2027'");
   await ops.retireSeason(root);
   const after = await ops.publishedResults();
@@ -226,6 +251,12 @@ export async function retentionScenario(root: service.User) {
   assert.equal(Object.values(after.rankings).flat().length, Object.values(before.rankings).flat().length);
   assert.equal((await database().query("SELECT id FROM users WHERE NOT is_owner AND staff_status<>'approved' AND disabled_at IS NULL")).rowCount, 0);
   assert.equal((await database().query("SELECT * FROM members")).rowCount, 0);
+  assert.equal((await database().query("SELECT * FROM submissions")).rowCount, 0);
+  assert.equal(Number((await database().query<{ count: string }>("SELECT count(*) FROM point_ledger")).rows[0].count), ledgerCount);
+  assert.equal((await database().query("SELECT id FROM point_ledger WHERE submission_id IS NOT NULL")).rowCount, 0);
+  assert.equal(Number((await database().query<{ count: string }>("SELECT count(*) FROM submission_evaluations")).rows[0].count), evaluationCount);
+  assert.equal((await database().query("SELECT id FROM submission_evaluations WHERE submission_id IS NOT NULL OR feedback_private<>'' OR feedback_public<>'' OR revision_reason<>'Datos retirados'")).rowCount, 0);
+  assert.equal((await database().query("SELECT evaluation_id FROM evaluation_scores WHERE comment<>''")).rowCount, 0);
   await assert.rejects(ops.retireSeason(root));
   assert.ok((await database().query("SELECT id FROM users WHERE id=$1 AND disabled_at IS NULL", [root.id])).rowCount);
   await assert.rejects(service.register({ email: "after-retirement@example.test", firstName: "Fixture", lastName: "Late", password: "test-password-123", adult: true, accepted: true }));

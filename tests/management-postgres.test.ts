@@ -46,8 +46,11 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     await database().query(await readFile(new URL("../database/001-management.sql", import.meta.url), "utf8"));
     await database().query("INSERT INTO schema_migrations(version) VALUES('001-management')");
     const legacyId = randomUUID();
+    const techRidersId = randomUUID();
     await database().query(`INSERT INTO users(id,email,first_name,last_name,password_hash,staff_status,community,terms_version,verified_at)
       VALUES($1,'legacy@example.test','Legacy','Fixture','unused','approved','Legacy community','league-2027-v1',now())`, [legacyId]);
+    await database().query(`INSERT INTO users(id,email,first_name,last_name,password_hash,staff_status,community,terms_version,verified_at)
+      VALUES($1,'tech-riders-admin@example.test','Tech','Riders','unused','approved','Tech Riders','league-2027-v1',now())`, [techRidersId]);
     for (let i = 0; i < 2; i++) {
       const migration = spawn(process.execPath, [fileURLToPath(new URL("../scripts/migrate.mjs", import.meta.url))], { cwd: fileURLToPath(new URL("../", import.meta.url)), env: process.env, stdio: "pipe" });
       let output = "";
@@ -56,12 +59,27 @@ test("PostgreSQL: complete registration, event operations, publication and reten
       const code = await new Promise<number | null>((resolve, reject) => { migration.once("error", reject); migration.once("exit", resolve); });
       assert.equal(code, 0, output);
     }
-    assert.equal((await database().query("SELECT * FROM schema_migrations")).rowCount, 3);
+    assert.equal((await database().query("SELECT * FROM schema_migrations")).rowCount, 5);
     assert.equal((await database().query("SELECT * FROM staff_memberships WHERE user_id=$1 AND active", [legacyId])).rowCount, 1);
+    assert.equal((await database().query("SELECT role FROM communities WHERE name='Tech Riders'")).rows[0].role, "admin_league");
+    assert.equal((await database().query(
+      "SELECT 1 FROM community_worlds WHERE community_id=(SELECT id FROM communities WHERE name='Tech Riders') AND world_id='hackathon' AND active",
+    )).rowCount, 1);
+    const techRidersToken = "a".repeat(64);
+    await database().query("INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '1 hour')",
+      [digest(techRidersToken), techRidersId]);
+    const communityAdmin = await service.sessionUser(techRidersToken);
+    assert.equal(communityAdmin?.is_league_admin, true);
+    assert.equal((await database().query("SELECT user_has_league_admin_privileges($1) AS allowed", [legacyId])).rows[0].allowed, false);
+    const community = await database().query<{ id: string }>(
+      "UPDATE communities SET eligible_for_staff_request=true WHERE name='Legacy community' RETURNING id");
+    const communityId = community.rows[0].id;
+    await database().query(
+      "INSERT INTO community_worlds(community_id,world_id) VALUES($1,'negocio'),($1,'datos')", [communityId]);
 
     const input = (address: string, staff = false) => ({
       email: address, firstName: "Fixture", lastName: "Test", password: "test-password-123",
-      accepted: true, adult: true, staff, community: staff ? "Fixture community" : "",
+      accepted: true, adult: true, staff, community: staff ? communityId : "",
     });
     const findToken = async (address: string, marker: string) => {
       const mails = await database().query<{ body: string }>("SELECT body FROM mail_outbox WHERE recipient=$1 ORDER BY created_at DESC", [address]);
@@ -98,10 +116,8 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     await service.invite(captain, { teamId, email: invitedStaffAddress });
     const staffInvitation = await findToken(invitedStaffAddress, "invitacion");
     const invitedStaff = await verified(invitedStaffAddress, true);
-    await assert.rejects(service.acceptInvitation(invitedStaff, { token: staffInvitation }), /no pueden participar/);
-    const staffInviteId = (await database().query("SELECT id FROM invitations WHERE token_hash=$1", [digest(staffInvitation)])).rows[0].id;
-    await service.cancelInvitation(captain, { teamId, invitationId: staffInviteId });
-    for (let i = 0; i < 3; i++) {
+    await service.acceptInvitation(invitedStaff, { token: staffInvitation });
+    for (let i = 0; i < 2; i++) {
       const address = `member${i}@example.test`;
       await service.invite(captain, { teamId, email: address });
       const value = await findToken(address, "invitacion");
@@ -117,29 +133,60 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     await assert.rejects(service.renameTeam(captain, { teamId, name: "Changed during review" }));
 
     const pending = await verified("staff@example.test", true);
-    await assert.rejects(service.createTeam(pending, { name: "Staff team" }), /no pueden participar/);
-    await assert.rejects(service.invite(stranger, { teamId: (await service.dashboard(stranger)).team!.id, email: pending.email }), /no pueden participar/);
+    await service.createTeam(pending, { name: "Staff team" });
+    assert.equal((await service.dashboard(pending)).team?.status, "draft");
+    await assert.rejects(service.invite(stranger, { teamId: (await service.dashboard(stranger)).team!.id, email: pending.email }), /pertenece/);
     await assert.rejects(service.review(pending, { id: teamId, kind: "team", status: "approved" }));
     const owner = await verified("owner-fixture@example.test");
     await database().query("UPDATE users SET is_owner=true,staff_status='approved' WHERE id=$1", [owner.id]);
     const root: service.User = { ...owner, staff_status: "approved", is_owner: true };
-    await assert.rejects(service.createTeam(owner, { name: "Owner team" }), /no pueden participar/);
+    const techRidersCommunity = await database().query<{ id: string }>("SELECT id FROM communities WHERE name='Tech Riders'");
+    await assert.rejects(service.setCommunityRole(communityAdmin!, {
+      communityId: techRidersCommunity.rows[0].id, role: "staff", reason: "Non-owner change should fail",
+    }), /Solo el responsable/);
+    await service.createCommunity(root, { name: "New community", eligible: false });
+    assert.equal((await database().query(
+      "SELECT 1 FROM community_worlds WHERE community_id=(SELECT id FROM communities WHERE name='New community') AND world_id='hackathon' AND active",
+    )).rowCount, 1);
+    await service.setCommunityRole(root, {
+      communityId: techRidersCommunity.rows[0].id, role: "staff", reason: "Verify inherited access is revoked",
+    });
+    assert.equal((await service.sessionUser(techRidersToken))?.is_league_admin, false);
+    await service.setCommunityRole(root, {
+      communityId: techRidersCommunity.rows[0].id, role: "admin_league", reason: "Restore fixture role",
+    });
+    assert.equal((await service.sessionUser(techRidersToken))?.is_league_admin, true);
+    await service.createTeam(owner, { name: "Owner team" });
     await database().query("UPDATE users SET staff_status='pending' WHERE id=$1", [stranger.id]);
-    await assert.rejects(service.review(root, { id: stranger.id, kind: "staff", status: "approved" }), /vinculada a un equipo/);
+    await assert.rejects(service.review(root, { id: stranger.id, kind: "staff", status: "approved", worldIds: ["negocio"] }));
     await database().query("UPDATE users SET staff_status='none' WHERE id=$1", [stranger.id]);
-    await service.review(root, { id: pending.id, kind: "staff", status: "approved" });
+    const requestId = async (person: service.User) =>
+      (await database().query<{ id: string }>("SELECT id FROM staff_requests WHERE user_id=$1", [person.id])).rows[0].id;
+    await service.review(root, { id: await requestId(pending), kind: "staff", status: "approved", worldIds: ["negocio"] });
     const staff: service.User = { ...pending, staff_status: "approved" };
-    await assert.rejects(service.createTeam(staff, { name: "Approved staff team" }), /no pueden participar/);
+    assert.ok((await service.dashboard(staff)).team);
+    const staffOps = await operations.operationsDashboard(staff);
+    assert.deepEqual(staffOps.events.map(event => event.id), ["negocio"]);
+    assert.ok(communityAdmin);
+    const adminOps = await operations.operationsDashboard(communityAdmin);
+    const allEventIds = (await database().query<{ id: string }>(
+      "SELECT id FROM league_events WHERE season='2027' ORDER BY ordinal",
+    )).rows.map(event => event.id);
+    assert.ok(allEventIds.length > 1);
+    assert.deepEqual(adminOps.events.map(event => event.id), allEventIds);
+    await assert.rejects(operations.saveChallenge(staff, { eventId: "datos", title: "Test", instructions: "Test", status: "draft" }), /permisos Staff/);
     const next = await verified("next-staff@example.test", true);
-    await service.review(staff, { id: next.id, kind: "staff", status: "approved" });
-    await assert.rejects(service.review(staff, { id: next.id, kind: "staff", status: "removed" }));
-    await service.review(staff, { id: teamId, kind: "team", status: "correction", reason: "Fixture correction" });
-    await service.renameTeam(captain, { teamId, name: "Corrected Team" });
+    await assert.rejects(service.review(staff, { id: await requestId(next), kind: "staff", status: "approved", worldIds: ["negocio"] }));
+    await assert.rejects(service.review(staff, { id: teamId, kind: "team", status: "correction", reason: "Fixture correction" }));
+    await service.review(root, { id: teamId, kind: "team", status: "correction", reason: "Fixture correction" });
+    await assert.rejects(service.renameTeam(captain, { teamId, name: "Corrected Team" }), /TEAM_NAME_IMMUTABLE/);
     await service.submitTeam(captain, { teamId });
-    await service.review(staff, { id: teamId, kind: "team", status: "approved" });
-    await assert.rejects(service.review(staff, { id: teamId, kind: "team", status: "approved" }));
+    await service.review(root, { id: teamId, kind: "team", status: "approved" });
+    await assert.rejects(service.review(root, { id: teamId, kind: "team", status: "approved" }));
     assert.equal((await service.dashboard(captain)).team.status, "approved");
-    await service.review(root, { id: next.id, kind: "staff", status: "removed" });
+    await service.review(root, { id: await requestId(invitedStaff), kind: "staff", status: "approved", worldIds: ["negocio", "datos"] });
+    await service.review(root, { id: await requestId(next), kind: "staff", status: "approved", worldIds: ["datos"] });
+    await service.review(root, { id: await requestId(next), kind: "staff", status: "removed" });
     await service.requestAccountMail({ email: captain.email }, "reset");
     const reset = await findToken(captain.email, "token");
     await service.redeem({ token: reset, purpose: "reset", password: "new-test-password-123" });
@@ -152,7 +199,12 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     const sessionCount = await database().query("SELECT count(*) FROM sessions WHERE token_hash=$1", [digest(rawToken)]);
     assert.equal(Number(sessionCount.rows[0].count), 0);
     const staffBoard = await service.staffDashboard(staff);
-    assert.ok(staffBoard.mails.length > 0); // Pending mail is observable, never silently treated as sent.
+    assert.equal(staffBoard.mails.length, 0);
+    const adminBoard = await service.staffDashboard(root);
+    assert.ok(adminBoard.mails.length > 0);
+    await database().query(
+      "INSERT INTO league_admins(user_id,active,granted_by) VALUES($1,true,$2) ON CONFLICT(user_id) DO UPDATE SET active=true",
+      [staff.id, root.id]);
     let acceptedMessages = 0;
     let rejectRecipients = false;
     const smtp = createServer(socket => {
@@ -199,6 +251,9 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     await operationsScenarios({ captain, staff, root, teamId, verified, findToken });
     const githubFixture = await githubScenarios({ root, directory, verified, findToken });
     if (process.env.LEAGUE_PRODUCTION_TEST === "true") {
+      const regularStaff = await verified("regular-staff-route@example.test", true);
+      assert.equal(regularStaff.is_league_admin, false);
+      await service.review(root, { id: await requestId(regularStaff), kind: "staff", status: "approved", worldIds: ["negocio"] });
       const reviewed = await operations.operationsDashboard(root);
       for (const { event, preview } of reviewed.previews.filter(p => p.preview.rows.length)) {
         assert.equal(preview.pending, false, "Fixture results are ready for publication");
@@ -248,7 +303,24 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         const participantPage = await fetch(`http://localhost:${httpPort}/mi-equipo`, { headers: { Cookie: credentials } });
         const participantHtml = await participantPage.text();
         assert.equal(participantPage.status, 200);
-        assert.match(participantHtml, /<nav\b[^>]*\bclass="site-nav"[^>]*>[\s\S]*?Mi equipo[\s\S]*?Cerrar sesión[\s\S]*?<\/nav>/);
+        assert.match(participantHtml, /<nav\b[^>]*\bclass="site-nav"[^>]*>[\s\S]*?Equipos[\s\S]*?Mi equipo[\s\S]*?Cerrar sesión[\s\S]*?<\/nav>/);
+        const participantSidebar = participantHtml.match(/<aside\b[^>]*>([\s\S]*?)<\/aside>/)?.[1];
+        const participantMenuOrder = [
+          'href="/mi-equipo/perfil"',
+          'href="/mi-equipo/equipo"',
+          'href="/mi-equipo/misiones"',
+          'href="/mi-equipo/rankings"',
+          'href="/mi-equipo/recursos"',
+        ].map(href => participantSidebar?.indexOf(href) ?? -1);
+        assert.ok(participantMenuOrder.every((position, index) => position >= 0 && (index === 0 || participantMenuOrder[index - 1] < position)));
+        assert.ok(!participantSidebar?.includes('href="/mi-equipo"'), "Adventure remains in the main navigation, not the profile submenu");
+        const participantProfilePage = await fetch(`http://localhost:${httpPort}/mi-equipo/perfil`, { headers: { Cookie: credentials } });
+        const participantProfileHtml = await participantProfilePage.text();
+        assert.equal(participantProfilePage.status, 200);
+        assert.match(participantProfileHtml, /<a\b(?=[^>]*href="\/mi-equipo\/perfil")(?=[^>]*aria-current="page")[^>]*>/);
+        assert.ok(participantProfileHtml.includes("Mi progreso en la League"));
+        assert.ok(participantProfileHtml.includes('src="/images/Techito.png"'));
+        assert.ok(participantProfileHtml.includes("Tu viaje en la League") && participantProfileHtml.includes("Actividad reciente"));
         assert.equal((await fetch(`http://localhost:${httpPort}/api/gestion/export`)).status, 401);
         assert.equal((await fetch(`http://localhost:${httpPort}/api/gestion/export`, { headers: { Cookie: credentials } })).status, 403);
         const rootLogin = await post("login", { email: root.email, password: "test-password-123" });
@@ -265,19 +337,87 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         const staffPage = await fetch(`http://localhost:${httpPort}/gestion`, { headers: { Cookie: rootCookie } });
         const staffHtml = await staffPage.text();
         assert.equal(staffPage.status, 200);
-        assert.ok(staffHtml.includes("Cerrar sesión") && staffHtml.includes("Mi cuenta"));
-        assert.match(staffHtml, /<details class="management-section"><summary>Solicitudes de staff/);
-        assert.match(staffHtml, /<details class="management-section"><summary>Operación de equipos y mundos/);
+        assert.ok(staffHtml.includes("Centro de control") && staffHtml.includes("Submenú de intranet"));
+        const sidebar = staffHtml.match(/<aside\b[^>]*>([\s\S]*?)<\/aside>/)?.[1];
+        const siteHeader = staffHtml.match(/<header class="site-header">([\s\S]*?)<\/header>/)?.[1];
+        assert.ok(sidebar?.includes('aria-label="Submenú de intranet"'));
+        assert.ok(!sidebar?.includes("logo.png") && !sidebar?.includes("/eventos") && !sidebar?.includes("/memoria"));
+        assert.ok(sidebar?.includes('href="/gestion/equipos"') && sidebar.includes('href="/gestion/retos"'));
+        assert.ok(sidebar?.includes('href="/gestion/staff"'));
+        const menuOrder = [
+          'href="/mi-equipo/perfil"',
+          'href="/gestion/comunidad"',
+          'href="/gestion/solicitudes-staff"',
+          'href="/gestion/equipos"',
+          'href="/gestion/entregas"',
+          'href="/gestion/evaluaciones"',
+          'href="/gestion"',
+        ].map(href => sidebar!.indexOf(href));
+        assert.ok(menuOrder.every((position, index) => position >= 0 && (index === 0 || menuOrder[index - 1] < position)));
+        assert.ok(!sidebar?.includes("Configuración"));
+        assert.ok(siteHeader?.includes("logo.png") && siteHeader.includes("Navegación principal"));
+        assert.ok(staffHtml.includes("Cerrar sesión") && staffHtml.includes("Gestión"));
+        assert.ok(staffHtml.includes("Estado de los mundos") && staffHtml.includes("Actividad reciente"));
+        assert.ok(!staffHtml.includes("Operación de equipos y mundos"), "The overview is not the whole management workspace");
+        const managementScreens = [
+          ["/gestion/mundos", "Todos los mundos"],
+          ["/gestion/retos", "Retos y soluciones"],
+          ["/gestion/entregas", "Publicar soluciones seleccionadas"],
+          ["/gestion/evaluaciones", "Evaluación"],
+          ["/gestion/equipos", "Operación de equipos y mundos"],
+          ["/gestion/participantes", "Participantes"],
+          ["/gestion/solicitudes-staff", "Solicitudes de Staff"],
+          ["/gestion/staff", "Staff de la League"],
+          ["/gestion/puntos", "Ledger inmutable de puntos"],
+          ["/gestion/comunidad", "Comunidades y ámbitos"],
+        ] as const;
+        for (const [path, content] of managementScreens) {
+          const response = await fetch(`http://localhost:${httpPort}${path}`, { headers: { Cookie: rootCookie } });
+          assert.equal(response.status, 200, `${path} is a separate intranet screen`);
+          assert.ok((await response.text()).includes(content), `${path} renders its own section`);
+        }
+        const regularStaffLogin = await post("login", { email: regularStaff.email, password: "test-password-123" });
+        const regularStaffCookie = regularStaffLogin.headers.get("set-cookie")!.split(";")[0];
+        assert.equal((await fetch(`http://localhost:${httpPort}/gestion/staff`, { headers: { Cookie: regularStaffCookie } })).status, 404,
+          "The staff directory is restricted to Admin League");
+        const challengesPage = await fetch(`http://localhost:${httpPort}/gestion/retos`, { headers: { Cookie: rootCookie } });
+        const challengesHtml = await challengesPage.text();
+        assert.ok(challengesHtml.includes('href="https://github.com/techriderscommunity/tech_riders_league"'));
+        assert.ok(!challengesHtml.includes("Guardar versión del reto"), "Challenge authoring is handled in GitHub");
         const ownerPage = await fetch(`http://localhost:${httpPort}/mi-equipo`, { headers: { Cookie: rootCookie } });
         const ownerHtml = await ownerPage.text();
-        assert.ok(ownerHtml.includes("Mi cuenta") && !ownerHtml.includes("Crear equipo como capitán"));
+        assert.ok(ownerHtml.includes("Mi perfil") && ownerHtml.includes("Submenú de intranet"));
+        assert.ok(!ownerHtml.includes("Crear equipo como capitán"));
+        const participantTeam = await fetch(`http://localhost:${httpPort}/mi-equipo/equipo`, { headers: { Cookie: credentials } });
+        assert.equal(participantTeam.status, 200);
+        const participantTeamHtml = await participantTeam.text();
+        assert.ok(participantTeamHtml.includes("Miembros del equipo"));
+        assert.ok(participantTeamHtml.includes("Estadísticas del equipo") && participantTeamHtml.includes("Actividad reciente"));
+        const participantMissions = await fetch(`http://localhost:${httpPort}/mi-equipo/misiones`, { headers: { Cookie: credentials } });
+        assert.equal(participantMissions.status, 200);
+        const participantMissionsHtml = await participantMissions.text();
+        assert.ok(participantMissionsHtml.includes("Mundos de mi equipo"));
+        assert.ok(participantMissionsHtml.includes("Seleccionar mundo") && participantMissionsHtml.includes("Estado del mundo"));
+        const participantRankings = await fetch(`http://localhost:${httpPort}/mi-equipo/rankings`, { headers: { Cookie: credentials } });
+        assert.equal(participantRankings.status, 200);
+        const participantRankingsHtml = await participantRankings.text();
+        assert.ok(participantRankingsHtml.includes("Rankings por mundo") && participantRankingsHtml.includes("Clasificación global"));
+        const worldDetail = await fetch(`http://localhost:${httpPort}/gestion/mundos?mundo=datos`, { headers: { Cookie: rootCookie } });
+        assert.equal(worldDetail.status, 200);
+        const worldDetailHtml = await worldDetail.text();
+        assert.ok(worldDetailHtml.includes("MUNDO") && worldDetailHtml.includes("Datos"));
+        assert.ok(/configuración oficial se mantiene en código/i.test(worldDetailHtml));
         const activationPage = await fetch(`http://localhost:${httpPort}/acceso?token=${"a".repeat(64)}&purpose=reset`);
         const activationHtml = await activationPage.text();
         const activationMain = activationHtml.match(/<main id="contenido">([\s\S]*?)<\/main>/)?.[1];
         assert.ok(activationMain);
         assert.ok(activationMain.includes("Nueva contraseña"));
         assert.ok(!activationMain.includes("¿Has olvidado tu contraseña?") && !activationMain.includes("<h2>Entrar</h2>"));
-        for (const title of ["Operación de equipos y mundos", "Retos y cierre de eventos", "Vouchers y premios", "Retención de temporada"]) assert.ok(staffHtml.includes(title), `Missing staff surface: ${title}`);
+        const settingsPage = await fetch(`http://localhost:${httpPort}/gestion/configuracion`, { headers: { Cookie: rootCookie } });
+        assert.equal(settingsPage.status, 404, "League rules are not editable through an intranet settings screen");
+        for (const action of ["save-season-rules", "set-retention", "save-challenge"]) {
+          assert.equal((await post(action, {}, rootCookie)).status, 404, `${action} is not exposed as a management API action`);
+        }
         const csv = await fetch(`http://localhost:${httpPort}/api/gestion/export`, { headers: { Cookie: rootCookie } });
         assert.equal(csv.status, 200);
         assert.ok(csv.headers.get("content-type")?.startsWith("text/csv"));
@@ -286,8 +426,9 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         const publicPage = await fetch(`http://localhost:${httpPort}/clasificacion`);
         assert.equal(publicPage.status, 200);
         const publicHtml = await publicPage.text();
-        assert.ok(publicHtml.includes("Corrected Team"), "Published event rankings render real teams");
+        assert.ok(publicHtml.includes("Fixture Team"), "Published event rankings render real teams");
         assert.ok(!publicHtml.includes(captain.email), "Public page does not expose participants");
+        assert.ok(!publicHtml.includes("Corrected private note"), "Published rankings never expose private evaluation feedback");
         for (const privateValue of ["private-team", githubFixture.sha!, githubFixture.snapshotKey, "ephemeral-fixture-user-token", "private-read-fixture-token", "publisher-fixture-token"]) {
           assert.ok(!publicHtml.includes(privateValue), "Public ranking does not expose private GitHub data");
           assert.ok(!staffHtml.includes(privateValue) || privateValue === githubFixture.sha || privateValue === "private-team", "Staff HTML never serializes tokens or snapshot keys");
