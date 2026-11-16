@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ManagementForm } from "./management-form";
 import { TERMS_VERSION } from "../lib/management/validation";
 import { AccessDialog } from "./access-dialog";
+import { RegistrationCommunityFields } from "./registration-community-fields";
 import { registrationCommunities } from "../lib/management/service";
 
 export async function AccessContent({ params = {} }: {
@@ -37,11 +38,7 @@ export async function AccessContent({ params = {} }: {
         <label>Apellidos<input name="lastName" maxLength={100} autoComplete="family-name" required /></label>
         <label>Correo de Luma<input name="email" type="email" autoComplete="email" required /></label>
         <label>Contraseña (mínimo 12 caracteres)<input name="password" type="password" minLength={12} maxLength={128} autoComplete="new-password" required /></label>
-        <label className="management-check"><input name="staff" type="checkbox" />Soy staff de una comunidad</label>
-        <label>Comunidad (solo si solicitas staff)<select name="community" defaultValue="">
-          <option value="">Selecciona una comunidad</option>
-          {communities.map(community => <option key={community.id} value={community.id}>{community.name}</option>)}
-        </select></label>
+        <RegistrationCommunityFields communities={communities} />
         <label className="management-check"><input name="adult" type="checkbox" required />Confirmo que tengo al menos 18 años.</label>
         <label className="management-check"><input name="accepted" type="checkbox" required />
           <span>Acepto las condiciones de participación, el tratamiento de datos para gestionar la League y la autorización de uso de mi imagen y voz para su difusión por Tech Riders y las comunidades organizadoras. <Link href="/privacidad" target="_blank">Leer condiciones y privacidad</Link> ({TERMS_VERSION}).</span>

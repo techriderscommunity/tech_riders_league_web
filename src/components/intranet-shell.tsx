@@ -33,7 +33,6 @@ const teamItem: Item = { key: "teams", label: "Equipos", href: "/gestion/equipos
 const deliveryItem: Item = { key: "deliveries", label: "Entregas", href: "/gestion/entregas" };
 const evaluationItem: Item = { key: "evaluations", label: "Evaluaciones", href: "/gestion/evaluaciones" };
 const dashboardItems: Item[] = [
-  { key: "control", label: "Vista general", href: "/gestion" },
   { key: "worlds", label: "Mi mundo (Datos)", href: "/gestion/mundos" },
   { key: "challenges", label: "Retos en GitHub", href: "/gestion/retos" },
   { key: "participants", label: "Participantes", href: "/gestion/participantes" },

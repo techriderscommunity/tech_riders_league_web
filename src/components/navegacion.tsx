@@ -19,17 +19,6 @@ export async function Navegacion() {
   const session = store.get(process.env.NODE_ENV === "production" ? "__Host-league-session" : "league-session")?.value;
   const user = session ? await sessionUser(session) : undefined;
   const canManage = Boolean(user && (user.staff_status === "approved" || user.is_owner || user.is_league_admin));
-  const menu = user ? canManage ? [
-    ["La aventura", "/eventos"],
-    ["Mundos", "/gestion/mundos"],
-    ["Equipos", "/gestion/equipos"],
-    ["Rankings", "/gestion/puntos"],
-  ] as const : [
-    ["La aventura", "/eventos"],
-    ["Mundos", "/mi-equipo/misiones"],
-    ["Equipos", "/mi-equipo/equipo"],
-    ["Rankings", "/mi-equipo/rankings"],
-  ] as const : enlaces;
   return (
     <header className="site-header">
       <Link
@@ -46,7 +35,7 @@ export async function Navegacion() {
         />
       </Link>
       <MenuNavegacion>
-        {menu.map(([label, href], indice) => (
+        {enlaces.map(([label, href], indice) => (
           <Link key={href} href={href}>
             <svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24">
               <path fill="currentColor" d={[

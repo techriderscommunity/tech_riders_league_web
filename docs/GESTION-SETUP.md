@@ -65,6 +65,11 @@
   League; el permiso se hereda por sus miembros Staff aprobados y se retira al
   cambiar el rol o desactivar su membresia. Solo el responsable puede cambiar
   roles comunitarios; las concesiones directas existentes siguen separadas.
+- El registro ofrece inicialmente Tech Riders, Sirviendo Codigo, Guarandinga
+  Tech y SQL Server Español. El selector solo se habilita al indicar que se es
+  staff; las comunidades pueden recibir solicitudes antes de tener mundos
+  asignados. Los ámbitos se asignan al revisar la solicitud. Los perfiles,
+  historias y logos oficiales se publican cuando cada comunidad los facilite.
 - El acceso de Staff se limita a los mundos asignados a su comunidad. Un mismo
   mundo puede estar asignado a varias comunidades cuando es compartido, como el
   Hackathon. Admin League tiene acceso a todos los mundos.

@@ -59,9 +59,22 @@ test("PostgreSQL: complete registration, event operations, publication and reten
       const code = await new Promise<number | null>((resolve, reject) => { migration.once("error", reject); migration.once("exit", resolve); });
       assert.equal(code, 0, output);
     }
-    assert.equal((await database().query("SELECT * FROM schema_migrations")).rowCount, 5);
+    assert.equal((await database().query("SELECT * FROM schema_migrations")).rowCount, 6);
     assert.equal((await database().query("SELECT * FROM staff_memberships WHERE user_id=$1 AND active", [legacyId])).rowCount, 1);
     assert.equal((await database().query("SELECT role FROM communities WHERE name='Tech Riders'")).rows[0].role, "admin_league");
+    const registrationOptions = await service.registrationCommunities();
+    assert.deepEqual(registrationOptions.map(community => community.name), [
+      "Tech Riders", "Sirviendo Codigo", "Guarandinga Tech", "SQL Server Español",
+    ]);
+    assert.deepEqual((await database().query<{ name: string; role: string }>(
+      "SELECT name,role FROM communities WHERE name=ANY($1::text[]) ORDER BY name",
+      [registrationOptions.map(community => community.name)],
+    )).rows, [
+      { name: "Guarandinga Tech", role: "staff" },
+      { name: "SQL Server Español", role: "staff" },
+      { name: "Sirviendo Codigo", role: "staff" },
+      { name: "Tech Riders", role: "admin_league" },
+    ]);
     assert.equal((await database().query(
       "SELECT 1 FROM community_worlds WHERE community_id=(SELECT id FROM communities WHERE name='Tech Riders') AND world_id='hackathon' AND active",
     )).rowCount, 1);
@@ -77,10 +90,24 @@ test("PostgreSQL: complete registration, event operations, publication and reten
     await database().query(
       "INSERT INTO community_worlds(community_id,world_id) VALUES($1,'negocio'),($1,'datos')", [communityId]);
 
-    const input = (address: string, staff = false) => ({
+    const input = (address: string, staff = false, selectedCommunity = communityId) => ({
       email: address, firstName: "Fixture", lastName: "Test", password: "test-password-123",
-      accepted: true, adult: true, staff, community: staff ? communityId : "",
+      accepted: true, adult: true, staff, community: staff ? selectedCommunity : "",
     });
+    const unassignedCommunity = registrationOptions.find(community => community.name === "Guarandinga Tech");
+    assert.ok(unassignedCommunity);
+    await service.register(input("unassigned-community-staff@example.test", true, unassignedCommunity.id));
+    const unassignedStaffRequest = await database().query<{ staff_status: string; community: string; community_id: string }>(
+      `SELECT u.staff_status,u.community,r.community_id
+       FROM users u JOIN staff_requests r ON r.user_id=u.id WHERE u.email=$1`,
+      ["unassigned-community-staff@example.test"],
+    );
+    assert.deepEqual(unassignedStaffRequest.rows[0], {
+      staff_status: "pending", community: "Guarandinga Tech", community_id: unassignedCommunity.id,
+    });
+    assert.equal((await database().query(
+      "SELECT 1 FROM community_worlds WHERE community_id=$1 AND active", [unassignedCommunity.id],
+    )).rowCount, 0, "A known community can receive staff applications before world assignments");
     const findToken = async (address: string, marker: string) => {
       const mails = await database().query<{ body: string }>("SELECT body FROM mail_outbox WHERE recipient=$1 ORDER BY created_at DESC", [address]);
       for (const { body } of mails.rows) {
@@ -285,6 +312,11 @@ test("PostgreSQL: complete registration, event operations, publication and reten
             method: "POST", headers: { "Content-Type": "application/json", Origin: suppliedOrigin, ...(cookie ? { Cookie: cookie } : {}) },
             body: JSON.stringify(body),
           });
+        const accessPage = await fetch(`http://localhost:${httpPort}/acceso`);
+        const accessHtml = await accessPage.text();
+        assert.equal(accessPage.status, 200);
+        for (const community of registrationOptions) assert.ok(accessHtml.includes(community.name));
+        assert.match(accessHtml, /<select id="registration-community" name="community"[^>]*disabled/);
         assert.equal((await post("create-team", { name: "Anonymous" })).status, 401);
         assert.equal((await post("login", { email: captain.email, password: "new-test-password-123" }, undefined, "https://untrusted.example")).status, 403);
         const login = await post("login", { email: captain.email, password: "new-test-password-123" });
@@ -303,7 +335,9 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         const participantPage = await fetch(`http://localhost:${httpPort}/mi-equipo`, { headers: { Cookie: credentials } });
         const participantHtml = await participantPage.text();
         assert.equal(participantPage.status, 200);
-        assert.match(participantHtml, /<nav\b[^>]*\bclass="site-nav"[^>]*>[\s\S]*?Equipos[\s\S]*?Mi equipo[\s\S]*?Cerrar sesión[\s\S]*?<\/nav>/);
+        const participantNavigation = participantHtml.match(/<nav\b[^>]*\bclass="site-nav"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
+        assert.ok(participantNavigation?.includes("Mapa de la aventura") && participantNavigation.includes("Mi equipo") && participantNavigation.includes("Cerrar sesión"));
+        assert.ok(!participantNavigation?.includes('href="/mi-equipo/equipo"') && !participantNavigation?.includes('href="/mi-equipo/rankings"'));
         const participantSidebar = participantHtml.match(/<aside\b[^>]*>([\s\S]*?)<\/aside>/)?.[1];
         const participantMenuOrder = [
           'href="/mi-equipo/perfil"',
@@ -344,6 +378,7 @@ test("PostgreSQL: complete registration, event operations, publication and reten
         assert.ok(!sidebar?.includes("logo.png") && !sidebar?.includes("/eventos") && !sidebar?.includes("/memoria"));
         assert.ok(sidebar?.includes('href="/gestion/equipos"') && sidebar.includes('href="/gestion/retos"'));
         assert.ok(sidebar?.includes('href="/gestion/staff"'));
+        assert.ok(!sidebar?.includes('href="/gestion"'), "The header provides the single entry to the management overview");
         const menuOrder = [
           'href="/mi-equipo/perfil"',
           'href="/gestion/comunidad"',
@@ -351,11 +386,13 @@ test("PostgreSQL: complete registration, event operations, publication and reten
           'href="/gestion/equipos"',
           'href="/gestion/entregas"',
           'href="/gestion/evaluaciones"',
-          'href="/gestion"',
         ].map(href => sidebar!.indexOf(href));
         assert.ok(menuOrder.every((position, index) => position >= 0 && (index === 0 || menuOrder[index - 1] < position)));
         assert.ok(!sidebar?.includes("Configuración"));
-        assert.ok(siteHeader?.includes("logo.png") && siteHeader.includes("Navegación principal"));
+        assert.ok(siteHeader?.includes("logo.png") && siteHeader?.includes("Navegación principal"));
+        assert.ok(siteHeader?.includes('href="/gestion"'));
+        assert.ok(siteHeader);
+        assert.ok(!siteHeader?.includes('href="/gestion/mundos"') && !siteHeader.includes('href="/gestion/equipos"') && !siteHeader.includes('href="/gestion/puntos"'));
         assert.ok(staffHtml.includes("Cerrar sesión") && staffHtml.includes("Gestión"));
         assert.ok(staffHtml.includes("Estado de los mundos") && staffHtml.includes("Actividad reciente"));
         assert.ok(!staffHtml.includes("Operación de equipos y mundos"), "The overview is not the whole management workspace");
@@ -375,6 +412,18 @@ test("PostgreSQL: complete registration, event operations, publication and reten
           const response = await fetch(`http://localhost:${httpPort}${path}`, { headers: { Cookie: rootCookie } });
           assert.equal(response.status, 200, `${path} is a separate intranet screen`);
           assert.ok((await response.text()).includes(content), `${path} renders its own section`);
+        }
+        const worldFilteredRoutes = [
+          ["/gestion/teams?mundo=negocio", "/gestion/equipos?mundo=negocio"],
+          ["/gestion/deliveries?mundo=datos", "/gestion/entregas?mundo=datos"],
+          ["/gestion/evaluations?mundo=cloud", "/gestion/evaluaciones?mundo=cloud"],
+          ["/gestion/participants?mundo=seguridad", "/gestion/participantes?mundo=seguridad"],
+        ] as const;
+        for (const [legacyPath, localizedHref] of worldFilteredRoutes) {
+          const response = await fetch(`http://localhost:${httpPort}${legacyPath}`, { headers: { Cookie: rootCookie } });
+          const html = await response.text();
+          assert.equal(response.status, 200, `${legacyPath} remains available for existing links`);
+          assert.ok(html.includes(`href="${localizedHref}"`), `${legacyPath} links to its localized route`);
         }
         const regularStaffLogin = await post("login", { email: regularStaff.email, password: "test-password-123" });
         const regularStaffCookie = regularStaffLogin.headers.get("set-cookie")!.split(";")[0];

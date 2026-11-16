@@ -7,6 +7,14 @@ import { OFFICIAL_REPOSITORY, oauthSettings } from "../lib/management/github-api
 import { MissionDelivery } from "./mission-delivery";
 import styles from "./intranet-shell.module.css";
 
+const managementSectionPaths: Record<string, string> = {
+  teams: "equipos",
+  participants: "participantes",
+  deliveries: "entregas",
+  evaluations: "evaluaciones",
+  points: "puntos",
+};
+
 function Reason() {
   return <label>Motivo / comprobación<textarea name="reason" maxLength={1000} required /></label>;
 }
@@ -122,6 +130,7 @@ function OperationsScreenOverview({ section, data, search, isAdmin, selectedWorl
   selectedWorldId?: string;
 }) {
   const query = search.trim().toLocaleLowerCase("es");
+  const sectionPath = `/gestion/${managementSectionPaths[section] ?? section}`;
   const worldTeams = data.views.filter(view =>
     !selectedWorldId || view.worlds.some(world => world.event.id === selectedWorldId));
   const teams = worldTeams.filter(view => !query || view.team.name.toLocaleLowerCase("es").includes(query));
@@ -151,8 +160,8 @@ function OperationsScreenOverview({ section, data, search, isAdmin, selectedWorl
 
   return <section className={styles.managementDashboard} aria-label={overviewTitle}>
     {data.events.length > 1 && ["teams", "participants", "deliveries", "evaluations", "points"].includes(section) ? <nav className={styles.managementTabs} aria-label="Filtrar por mundo">
-      <Link href={`/gestion/${section}`} aria-current={!selectedWorldId ? "page" : undefined}>Todos los mundos</Link>
-      {data.events.map(event => <Link key={event.id} href={`/gestion/${section}?mundo=${encodeURIComponent(event.id)}`}
+      <Link href={sectionPath} aria-current={!selectedWorldId ? "page" : undefined}>Todos los mundos</Link>
+      {data.events.map(event => <Link key={event.id} href={`${sectionPath}?mundo=${encodeURIComponent(event.id)}`}
         aria-current={selectedWorldId === event.id ? "page" : undefined}>Mundo {event.ordinal} · {event.name}</Link>)}
     </nav> : null}
     {section === "teams" ? <div className={styles.managementGrid}>
@@ -176,7 +185,7 @@ function OperationsScreenOverview({ section, data, search, isAdmin, selectedWorl
         <form method="get" className={styles.managementFilters}>
           <input type="search" name="equipo" defaultValue={search} placeholder="Buscar equipo" aria-label="Buscar equipo" />
           <button type="submit">Buscar</button>
-          {search ? <Link href="/gestion/equipos">Limpiar</Link> : null}
+          {search ? <Link href={sectionPath}>Limpiar</Link> : null}
         </form>
         {!teams.length ? <p className={styles.managementEmpty}>No hay equipos aprobados que coincidan con la búsqueda.</p> : <div className={styles.managementTableWrap}>
           <table className={styles.managementTable}>
@@ -210,7 +219,7 @@ function OperationsScreenOverview({ section, data, search, isAdmin, selectedWorl
         <form method="get" className={styles.managementFilters}>
           <input type="search" name="buscar" defaultValue={search} placeholder="Buscar nombre, correo o equipo" aria-label="Buscar participante" />
           <button type="submit">Buscar</button>
-          {search ? <Link href="/gestion/participantes">Limpiar</Link> : null}
+          {search ? <Link href={sectionPath}>Limpiar</Link> : null}
         </form>
         {!people.length ? <p className={styles.managementEmpty}>No hay participantes que coincidan con la búsqueda.</p> : <div className={styles.managementTableWrap}>
           <table className={styles.managementTable}>

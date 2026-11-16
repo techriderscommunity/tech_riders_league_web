@@ -63,9 +63,15 @@ export async function sessionUser(value: string | undefined): Promise<User | und
 export async function registrationCommunities() {
   if (!process.env.DATABASE_URL) return [];
   const result = await database().query<{ id: string; name: string }>(
-    `SELECT DISTINCT c.id,c.name FROM communities c
-     JOIN community_worlds cw ON cw.community_id=c.id AND cw.active
-     WHERE c.active AND c.eligible_for_staff_request ORDER BY c.name`);
+    `SELECT c.id,c.name FROM communities c
+     WHERE c.active AND c.eligible_for_staff_request
+     ORDER BY CASE c.name
+       WHEN 'Tech Riders' THEN 0
+       WHEN 'Sirviendo Codigo' THEN 1
+       WHEN 'Guarandinga Tech' THEN 2
+       WHEN 'SQL Server Español' THEN 3
+       ELSE 4
+     END,c.name`);
   return result.rows;
 }
 async function currentAdmin(client: PoolClient, userId: string) {
@@ -218,10 +224,8 @@ export async function register(input: Input) {
   const communityId = input.staff === true ? uuid(input.community) : null;
   return transaction(async client => {
     const community = communityId ? await client.query<{ id: string; name: string }>(
-      `SELECT c.id,c.name FROM communities c
-       JOIN community_worlds cw ON cw.community_id=c.id AND cw.active
-       JOIN league_events e ON e.id=cw.world_id AND e.season='2027'
-       WHERE c.id=$1 AND c.active AND c.eligible_for_staff_request LIMIT 1`, [communityId]) : { rows: [] };
+      `SELECT id,name FROM communities
+       WHERE id=$1 AND active AND eligible_for_staff_request LIMIT 1`, [communityId]) : { rows: [] };
     if (communityId && !community.rows[0]) throw new ManagementError("La comunidad no admite solicitudes Staff.");
     const id = randomUUID();
     await client.query(`INSERT INTO users(id,email,first_name,last_name,password_hash,staff_status,community,terms_version,accepted_at)
