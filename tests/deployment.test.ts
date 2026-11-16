@@ -1,9 +1,18 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cp, lstat, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
+import { assertExpectedMigrations, DATABASE_MIGRATIONS } from "../scripts/database-migrations.mjs";
+
+test("startup verification tracks every database migration", async () => {
+  const files = await readdir(new URL("../database/", import.meta.url));
+  const versions = files.filter(name => name.endsWith(".sql")).map(name => name.slice(0, -4)).sort();
+  assert.deepEqual(DATABASE_MIGRATIONS, versions);
+  assert.doesNotThrow(() => assertExpectedMigrations(versions));
+  assert.throws(() => assertExpectedMigrations(versions.slice(0, -1)), /Unexpected database migration state/);
+});
 
 test("the release package includes only production website files", async () => {
   const root = await mkdtemp(join(tmpdir(), "league-release-"));
@@ -20,7 +29,8 @@ test("the release package includes only production website files", async () => {
       dependencies: { pg: "8.16.0" }, devDependencies: { "test-tool": "1.0.0" },
     }));
     for (const name of ["src/app/page.tsx", "public/logo.png", "content/temporada.json", "database/001-management.sql", "node_modules/pg/package.json", ".next/BUILD_ID", ".next/server/app.js", ".next/cache/ignored", ".env.local", "tests/ignored.ts", "knowledge/ignored"]) await file(name);
-    for (const name of ["azure-initialize.mjs", "azure-maintenance.mjs", "migrate.mjs", "database.mjs", "verify-azure-database.mjs", "bootstrap.mjs", "send-mail.mjs", "retire-data.mjs"]) await file(`scripts/${name}`);
+    for (const name of ["azure-initialize.mjs", "azure-maintenance.mjs", "migrate.mjs", "database.mjs", "database-migrations.mjs", "verify-azure-database.mjs", "bootstrap.mjs", "send-mail.mjs", "retire-data.mjs"]) await file(`scripts/${name}`);
+    await file("database/006-registration-communities.sql");
     await mkdir(join(root, ".next", "node_modules"));
     await symlink(join(root, "node_modules", "pg"), join(root, ".next", "node_modules", "pg-fixture"), "junction");
     await cp(new URL("../scripts/package-release.mjs", import.meta.url), join(root, "scripts", "package-release.mjs"));
@@ -31,7 +41,7 @@ test("the release package includes only production website files", async () => {
     await rm(join(root, "node_modules", "test-tool"), { recursive: true });
     const packaged = run();
     assert.equal(packaged.status, 0, packaged.stderr);
-    for (const name of ["public/logo.png", ".next/BUILD_ID", ".next/node_modules/pg-fixture/package.json", "database/001-management.sql", "scripts/migrate.mjs", "node_modules/pg/package.json"]) {
+    for (const name of ["public/logo.png", ".next/BUILD_ID", ".next/node_modules/pg-fixture/package.json", "database/001-management.sql", "database/006-registration-communities.sql", "scripts/migrate.mjs", "scripts/database-migrations.mjs", "node_modules/pg/package.json"]) {
       assert.ok((await stat(join(root, "dist", "web", name))).isFile());
     }
     assert.equal((await lstat(join(root, "dist", "web", ".next", "node_modules", "pg-fixture"))).isSymbolicLink(), false);

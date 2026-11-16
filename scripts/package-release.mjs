@@ -30,7 +30,7 @@ await cp(join(root, ".next"), join(destination, ".next"), {
   filter: source => source !== join(root, ".next", "cache"),
 });
 await mkdir(join(destination, "scripts"));
-for (const name of ["azure-initialize.mjs", "azure-maintenance.mjs", "migrate.mjs", "database.mjs", "verify-azure-database.mjs", "bootstrap.mjs", "send-mail.mjs", "retire-data.mjs"]) {
+for (const name of ["azure-initialize.mjs", "azure-maintenance.mjs", "migrate.mjs", "database.mjs", "database-migrations.mjs", "verify-azure-database.mjs", "bootstrap.mjs", "send-mail.mjs", "retire-data.mjs"]) {
   await cp(join(root, "scripts", name), join(destination, "scripts", name));
 }
 await writeFile(join(destination, "package.json"), JSON.stringify({
